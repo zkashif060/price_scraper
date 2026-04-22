@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arbitrage Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:      #0a0a0f;
+  --surface: #111118;
+  --border:  #1e1e2e;
+  --border2: #2a2a3e;
+  --text:    #e2e2f0;
+  --muted:   #6b6b8a;
+  --accent:  #7c6af7;
+  --green:   #22c55e;
+  --red:     #ef4444;
+  --amber:   #f59e0b;
+  --blue:    #3b82f6;
+  --mono:    'JetBrains Mono', monospace;
+  --sans:    'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Layout ── */
+.shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.logo {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.logo-mark {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.logo-mark span { color: var(--accent); }
+.logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all .15s;
+  border-left: 2px solid transparent;
+}
+.nav a:hover { color: var(--text); background: rgba(124,106,247,.06); }
+.nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(124,106,247,.08); }
+.nav .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  max-width: 1100px;
+}
+
+/* ── Page header ── */
+.page-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-hd h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.2px; }
+.page-hd p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all .15s;
+}
+.refresh-btn:hover { color: var(--text); border-color: var(--accent); }
+
+/* ── Stat cards ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  transition: border-color .2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+.stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  font-family: var(--mono);
+  margin: 6px 0 2px;
+  letter-spacing: -1px;
+  color: var(--text);
+}
+.stat-sub  { font-size: 11px; color: var(--muted); }
+.stat-card.green .stat-value { color: var(--green); }
+.stat-card.red   .stat-value { color: var(--red); }
+.stat-card.amber .stat-value { color: var(--amber); }
+.stat-card.blue  .stat-value { color: var(--blue); }
+.stat-card.accent .stat-value { color: var(--accent); }
+
+/* ── Section card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.card-hd h2 { font-size: 13px; font-weight: 600; }
+.card-hd .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+.badge-green  { background: rgba(34,197,94,.12);  color: var(--green); }
+.badge-red    { background: rgba(239,68,68,.12);   color: var(--red); }
+.badge-amber  { background: rgba(245,158,11,.12);  color: var(--amber); }
+.badge-blue   { background: rgba(59,130,246,.12);  color: var(--blue); }
+.badge-accent { background: rgba(124,106,247,.12); color: var(--accent); }
+.badge-muted  { background: rgba(107,107,138,.12); color: var(--muted); }
+
+/* ── Accounts list ── */
+.account-list { display: flex; flex-direction: column; }
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.account-row:last-child { border-bottom: none; }
+.account-row:hover { background: rgba(255,255,255,.02); }
+
+.account-avatar {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.account-info { flex: 1; min-width: 0; }
+.account-name { font-weight: 500; font-size: 13px; }
+.account-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.account-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.account-stats strong { color: var(--text); font-family: var(--mono); }
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.error  { background: var(--red); }
+.status-dot.disconnected { background: var(--muted); }
+
+.disconnect-btn {
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.disconnect-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* ── Connect form ── */
+.connect-form {
+  padding: 16px 18px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.connect-form input {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color .15s;
+}
+.connect-form input:focus { border-color: var(--accent); }
+.connect-form input::placeholder { color: var(--muted); }
+
+.btn-connect {
+  padding: 8px 16px;
+  background: var(--accent);
+  border: none;
+  border-radius: 7px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity .15s;
+}
+.btn-connect:hover { opacity: .85; }
+
+/* ── Price changes feed ── */
+.change-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.change-row:last-child { border-bottom: none; }
+.change-asin { font-family: var(--mono); font-size: 11px; color: var(--muted); width: 100px; flex-shrink: 0; }
+.change-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.change-price { font-family: var(--mono); font-size: 12px; flex-shrink: 0; }
+.change-price.up   { color: var(--green); }
+.change-price.down { color: var(--red); }
+.change-price.oos  { color: var(--amber); }
+.change-time { font-size: 11px; color: var(--muted); flex-shrink: 0; width: 60px; text-align: right; }
+
+/* ── Priority breakdown ── */
+.priority-bar { padding: 16px 18px; }
+.pbar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.pbar-label span:last-child { color: var(--muted); font-family: var(--mono); }
+.pbar-track { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 10px; overflow: hidden; }
+.pbar-fill  { height: 100%; border-radius: 3px; transition: width .5s ease; }
+.pbar-fill.hot  { background: var(--red); }
+.pbar-fill.warm { background: var(--amber); }
+.pbar-fill.cold { background: var(--muted); }
+
+/* ── Log ── */
+.log-wrap {
+  padding: 12px 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  max-height: 160px;
+  overflow-y: auto;
+  line-height: 1.8;
+}
+.log-wrap .ok   { color: var(--green); }
+.log-wrap .err  { color: var(--red); }
+.log-wrap .info { color: var(--blue); }
+
+/* ── Empty states ── */
+.empty { text-align: center; padding: 32px 18px; color: var(--muted); font-size: 13px; }
+
+/* ── Spinner ── */
+.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: rot .6s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">arbi<span>.</span>track</div>
+      <div class="logo-sub">eBay arbitrage system</div>
+    </div>
+    <div class="nav">
+      <a href="#" class="active"><span class="dot"></span>Dashboard</a>
+      <a href="#accounts"><span class="dot"></span>Accounts</a>
+      <a href="#changes"><span class="dot"></span>Price changes</a>
+      <a href="#priorities"><span class="dot"></span>Priorities</a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Header -->
+    <div class="page-hd">
+      <div>
+        <h1>Dashboard</h1>
+        <p id="lastRefresh">Loading...</p>
+      </div>
+      <button class="refresh-btn" onclick="loadAll()">
+        <span id="refreshIcon">↻</span> Refresh
+      </button>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Accounts</div><div class="stat-value"><span class="spin"></span></div></div>
+      <div class="stat-card"><div class="stat-label">Listings</div><div class="stat-value"><span class="spin"></span></div></div>
+      <div class="stat-card"><div class="stat-label">ASINs tracked</div><div class="stat-value"><span class="spin"></span></div></div>
+      <div class="stat-card green"><div class="stat-label">Prices updated today</div><div class="stat-value"><span class="spin"></span></div></div>
+      <div class="stat-card amber"><div class="stat-label">OOS paused today</div><div class="stat-value"><span class="spin"></span></div></div>
+      <div class="stat-card blue"><div class="stat-label">Restored today</div><div class="stat-value"><span class="spin"></span></div></div>
+    </div>
+
+    <!-- Accounts -->
+    <div class="card" id="accounts">
+      <div class="card-hd">
+        <h2>Connected accounts</h2>
+        <span class="badge badge-muted" id="accountBadge">—</span>
+      </div>
+      <!-- Connect form -->
+      <div class="connect-form">
+        <input type="text" id="labelInput" placeholder="Account label — e.g. Store UK 1">
+        <button class="btn-connect" onclick="startConnect()">+ Connect eBay account</button>
+      </div>
+      <div class="account-list" id="accountList">
+        <div class="empty">Loading accounts...</div>
+      </div>
+    </div>
+
+    <!-- Price changes -->
+    <div class="card" id="changes">
+      <div class="card-hd">
+        <h2>Recent price changes</h2>
+        <span class="badge badge-green" id="changesBadge">today</span>
+      </div>
+      <div id="changesList"><div class="empty">Loading...</div></div>
+    </div>
+
+    <!-- Priority breakdown -->
+    <div class="card" id="priorities">
+      <div class="card-hd">
+        <h2>Keepa priority breakdown</h2>
+        <span class="badge badge-accent">€49 plan</span>
+      </div>
+      <div class="priority-bar" id="priorityBars">
+        <div class="empty">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Activity log -->
+    <div class="card">
+      <div class="card-hd"><h2>Activity log</h2></div>
+      <div class="log-wrap" id="logWrap"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Config — EDIT THESE ───────────────────────────────────────────────────────
+const TURSO_URL   = "YOUR_TURSO_HTTP_URL";    // https://xxx.turso.io
+const TURSO_TOKEN = "YOUR_TURSO_AUTH_TOKEN";  // your turso auth token
+
+// eBay OAuth config (for Connect button)
+const EBAY_CLIENT_ID = "YOUR_EBAY_CLIENT_ID";
+const EBAY_RUNAME    = "YOUR_EBAY_RUNAME";
+const SCOPES = [
+  "https://api.ebay.com/oauth/api_scope/sell.inventory",
+  "https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly",
+  "https://api.ebay.com/oauth/api_scope/sell.analytics.readonly"
+].join(" ");
+
+// ── Turso query helper ────────────────────────────────────────────────────────
+async function query(sql, args = []) {
+  const res = await fetch(`${TURSO_URL}/v2/pipeline`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${TURSO_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      requests: [{
+        type: "execute",
+        stmt: { sql, args: args.map(v => ({ type: "text", value: String(v) })) }
+      }]
+    })
+  });
+  const data = await res.json();
+  const result = data.results?.[0]?.response?.result;
+  return {
+    cols: (result?.cols || []).map(c => c.name),
+    rows: (result?.rows || []).map(r => r.map(c => c.value))
+  };
+}
+
+// ── Log helper ────────────────────────────────────────────────────────────────
+function log(msg, type = "info") {
+  const el = document.getElementById("logWrap");
+  const d  = document.createElement("div");
+  d.className = type;
+  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.prepend(d);
+  if (el.children.length > 40) el.lastChild.remove();
+}
+
+// ── Time formatter ────────────────────────────────────────────────────────────
+function timeAgo(iso) {
+  if (!iso) return "never";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h/24)}d ago`;
+}
+
+// ── Load stats ────────────────────────────────────────────────────────────────
+async function loadStats() {
+  const today = new Date().toISOString().split("T")[0];
+
+  const [accounts, listings, products, changes] = await Promise.all([
+    query("SELECT COUNT(*) FROM ebay_accounts WHERE status='active'"),
+    query("SELECT COUNT(*) FROM listings WHERE status='active'"),
+    query("SELECT COUNT(*), priority FROM products GROUP BY priority"),
+    query(`SELECT change_type, COUNT(*) FROM price_changes WHERE changed_at >= ? GROUP BY change_type`, [today])
+  ]);
+
+  const totalAccounts = accounts.rows[0]?.[0] || 0;
+  const totalListings = listings.rows[0]?.[0] || 0;
+
+  let totalAsins = 0, hotAsins = 0, warmAsins = 0, coldAsins = 0;
+  for (const row of products.rows) {
+    const [count, priority] = row;
+    totalAsins += Number(count);
+    if (priority === "hot")  hotAsins  = Number(count);
+    if (priority === "warm") warmAsins = Number(count);
+    if (priority === "cold") coldAsins = Number(count);
+  }
+
+  let priceUpdates = 0, oosCount = 0, restoredCount = 0;
+  for (const row of changes.rows) {
+    const [type, count] = row;
+    if (type === "up" || type === "down") priceUpdates += Number(count);
+    if (type === "out_of_stock") oosCount = Number(count);
+    if (type === "restored") restoredCount = Number(count);
+  }
+
+  // Render stat cards
+  const grid = document.getElementById("statsGrid");
+  grid.innerHTML = `
+    <div class="stat-card accent">
+      <div class="stat-label">Accounts</div>
+      <div class="stat-value">${totalAccounts}</div>
+      <div class="stat-sub">connected</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active listings</div>
+      <div class="stat-value">${totalListings.toLocaleString()}</div>
+      <div class="stat-sub">across all accounts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">ASINs tracked</div>
+      <div class="stat-value">${totalAsins.toLocaleString()}</div>
+      <div class="stat-sub">${hotAsins} hot · ${warmAsins} warm · ${coldAsins} cold</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Prices updated today</div>
+      <div class="stat-value">${priceUpdates}</div>
+      <div class="stat-sub">via Keepa + eBay API</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">OOS paused today</div>
+      <div class="stat-value">${oosCount}</div>
+      <div class="stat-sub">out of stock on Amazon</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Restored today</div>
+      <div class="stat-value">${restoredCount}</div>
+      <div class="stat-sub">back in stock</div>
+    </div>
+  `;
+
+  // Priority bars
+  const bars = document.getElementById("priorityBars");
+  const total = Math.max(totalAsins, 1);
+  bars.innerHTML = `
+    <div class="pbar-label"><span>🔴 Hot — checked every 2 hrs</span><span>${hotAsins} ASINs</span></div>
+    <div class="pbar-track"><div class="pbar-fill hot" style="width:${(hotAsins/total*100).toFixed(1)}%"></div></div>
+    <div class="pbar-label"><span>🟡 Warm — checked every 6 hrs</span><span>${warmAsins} ASINs</span></div>
+    <div class="pbar-track"><div class="pbar-fill warm" style="width:${(warmAsins/total*100).toFixed(1)}%"></div></div>
+    <div class="pbar-label"><span>⚪ Cold — skipped (no views/sales)</span><span>${coldAsins} ASINs</span></div>
+    <div class="pbar-track"><div class="pbar-fill cold" style="width:${(coldAsins/total*100).toFixed(1)}%"></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;">
+      Keepa €49 plan: ~${((hotAsins*12 + warmAsins*4) * 30).toLocaleString()} tokens/month estimated
+    </div>
+  `;
+}
+
+// ── Load accounts ─────────────────────────────────────────────────────────────
+async function loadAccounts() {
+  const result = await query(`
+    SELECT a.account_id, a.ebay_username, a.status, a.connected_at, a.last_synced,
+           COUNT(l.id) as listing_count
+    FROM ebay_accounts a
+    LEFT JOIN listings l ON l.account_id = a.account_id AND l.status = 'active'
+    GROUP BY a.account_id
+    ORDER BY a.connected_at DESC
+  `);
+
+  const container = document.getElementById("accountList");
+  document.getElementById("accountBadge").textContent = `${result.rows.length} accounts`;
+
+  if (!result.rows.length) {
+    container.innerHTML = '<div class="empty">No accounts connected. Use the form above to connect your first eBay account.</div>';
+    return;
+  }
+
+  container.innerHTML = "";
+  for (const row of result.rows) {
+    const [accountId, ebayUser, status, connectedAt, lastSynced, listingCount] = row;
+    const initial = (accountId || "?")[0].toUpperCase();
+
+    const div = document.createElement("div");
+    div.className = "account-row";
+    div.innerHTML = `
+      <div class="account-avatar">${initial}</div>
+      <div class="account-info">
+        <div class="account-name">${accountId}</div>
+        <div class="account-meta">eBay: ${ebayUser || "—"} · Connected ${timeAgo(connectedAt)}</div>
+      </div>
+      <div class="account-stats">
+        <div><strong>${Number(listingCount).toLocaleString()}</strong> listings</div>
+        <div>synced ${timeAgo(lastSynced)}</div>
+      </div>
+      <span class="badge badge-${status === 'active' ? 'green' : 'red'}">${status}</span>
+      <div class="status-dot ${status}"></div>
+      <button class="disconnect-btn" onclick="disconnect('${accountId}')">Disconnect</button>
+    `;
+    container.appendChild(div);
+  }
+}
+
+// ── Load price changes ────────────────────────────────────────────────────────
+async function loadChanges() {
+  const today = new Date().toISOString().split("T")[0];
+  const result = await query(`
+    SELECT pc.asin, pc.sku, pc.old_price, pc.new_price, pc.change_type,
+           pc.changed_at, pc.account_id, l.title
+    FROM price_changes pc
+    LEFT JOIN listings l ON l.sku = pc.sku AND l.account_id = pc.account_id
+    WHERE pc.changed_at >= ?
+    ORDER BY pc.changed_at DESC
+    LIMIT 50
+  `, [today]);
+
+  const container = document.getElementById("changesList");
+  document.getElementById("changesBadge").textContent = `${result.rows.length} today`;
+
+  if (!result.rows.length) {
+    container.innerHTML = '<div class="empty">No price changes today yet.</div>';
+    return;
+  }
+
+  container.innerHTML = "";
+  for (const row of result.rows) {
+    const [asin, sku, oldPrice, newPrice, changeType, changedAt, accountId, title] = row;
+    const div = document.createElement("div");
+    div.className = "change-row";
+
+    let priceHtml = "";
+    if (changeType === "out_of_stock") {
+      priceHtml = `<span class="change-price oos">OOS paused</span>`;
+    } else if (changeType === "restored") {
+      priceHtml = `<span class="change-price up">Restored £${Number(newPrice).toFixed(2)}</span>`;
+    } else {
+      const up = Number(newPrice) > Number(oldPrice);
+      priceHtml = `<span class="change-price ${up ? 'up' : 'down'}">
+        ${up ? '▲' : '▼'} £${Number(oldPrice).toFixed(2)} → £${Number(newPrice).toFixed(2)}
+      </span>`;
+    }
+
+    div.innerHTML = `
+      <div class="change-asin">${asin || sku?.substring(0,10)}</div>
+      <div class="change-title">${title || sku || "—"}</div>
+      ${priceHtml}
+      <div class="change-time">${timeAgo(changedAt)}</div>
+    `;
+    container.appendChild(div);
+  }
+}
+
+// ── Connect eBay account ──────────────────────────────────────────────────────
+function startConnect() {
+  const label = document.getElementById("labelInput").value.trim();
+  if (!label) { alert("Enter an account label first."); return; }
+  sessionStorage.setItem("pendingLabel", label);
+
+  const authUrl = "https://auth.ebay.com/oauth2/authorize?" + new URLSearchParams({
+    client_id: EBAY_CLIENT_ID, redirect_uri: EBAY_RUNAME,
+    response_type: "code", scope: SCOPES, prompt: "login"
+  });
+
+  log(`Redirecting to eBay for: ${label}`);
+  window.location.href = authUrl;
+}
+
+// ── Handle OAuth callback ─────────────────────────────────────────────────────
+async function handleCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  if (!code) return;
+  window.history.replaceState({}, "", window.location.pathname);
+
+  const label = sessionStorage.getItem("pendingLabel") || "Account";
+  sessionStorage.removeItem("pendingLabel");
+  log(`Exchanging token for "${label}"...`);
+
+  // NOTE: Token exchange must go through a server to keep client_secret safe.
+  // Deploy the exchange endpoint to Cloudflare Workers or use connect_ebay.py locally.
+  // If you have a worker deployed, call it here:
+  // const res = await fetch("https://your-worker.workers.dev/api/exchange-token", {...})
+  log(`Token received for "${label}". Run connect_ebay.py to save to database, or deploy worker endpoint.`, "info");
+}
+
+// ── Disconnect ────────────────────────────────────────────────────────────────
+async function disconnect(accountId) {
+  if (!confirm(`Disconnect "${accountId}"? Listing data is kept.`)) return;
+  await query("UPDATE ebay_accounts SET status='disconnected' WHERE account_id=?", [accountId]);
+  log(`Disconnected: ${accountId}`, "info");
+  await loadAll();
+}
+
+// ── Load all ──────────────────────────────────────────────────────────────────
+async function loadAll() {
+  document.getElementById("refreshIcon").textContent = "⏳";
+  try {
+    await Promise.all([loadStats(), loadAccounts(), loadChanges()]);
+    document.getElementById("lastRefresh").textContent =
+      `Last updated ${new Date().toLocaleTimeString()}`;
+    log("Dashboard refreshed", "ok");
+  } catch (err) {
+    log(`Load error: ${err.message}`, "err");
+  }
+  document.getElementById("refreshIcon").textContent = "↻";
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+handleCallback();
+loadAll();
+setInterval(loadAll, 60000); // Auto-refresh every minute
+</script>
+</body>
+</html>
