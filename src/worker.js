@@ -7,6 +7,10 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+/g, "/").replace(/\/+$/g, "");
 
+    if (request.method === "GET") {
+      return this.handleRedirect(request);
+    }
+
     if (request.method !== "POST") {
       return this.corsResponse({ error: "Only POST requests are allowed." }, 405);
     }
@@ -61,6 +65,35 @@ export default {
     return new Response(body !== null ? JSON.stringify(body) : null, {
       status,
       headers: this.corsHeaders()
+    });
+  },
+
+  handleRedirect(request) {
+    const url = request.url;
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>eBay OAuth Redirect</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+pre { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>eBay Authorization Complete</h1>
+<p>Copy the full URL below and paste it back in the dashboard:</p>
+<pre>${url}</pre>
+<p><strong>Instructions:</strong></p>
+<ol>
+<li>Select and copy the entire URL from the box above.</li>
+<li>Go back to the dashboard and paste it into the input field.</li>
+<li>Click "Save token →" to complete the connection.</li>
+</ol>
+</body>
+</html>`;
+    return new Response(html, {
+      headers: { "Content-Type": "text/html" }
     });
   },
 
@@ -216,10 +249,10 @@ export default {
 
     const missing = [];
     const clientId = env.EBAY_CLIENT_ID || body.client_id;
-    const redirectUri = env.EBAY_RUNAME || body.redirect_uri;
+    const redirectUri = env.EBAY_REDIRECT_URI || body.redirect_uri;
     if (!clientId) missing.push("EBAY_CLIENT_ID");
     if (!env.EBAY_CLIENT_SECRET) missing.push("EBAY_CLIENT_SECRET");
-    if (!redirectUri) missing.push("EBAY_RUNAME");
+    if (!redirectUri) missing.push("EBAY_REDIRECT_URI");
     if (missing.length) {
       throw new Error(`Server is missing eBay OAuth settings: ${missing.join(", ")}`);
     }

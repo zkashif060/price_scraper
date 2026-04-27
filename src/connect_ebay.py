@@ -20,7 +20,7 @@ from utils import get_db
 
 EBAY_CLIENT_ID     = os.getenv("EBAY_CLIENT_ID")
 EBAY_CLIENT_SECRET = os.getenv("EBAY_CLIENT_SECRET")
-EBAY_RUNAME        = os.getenv("EBAY_RUNAME")
+EBAY_REDIRECT_URI  = os.getenv("EBAY_REDIRECT_URI")
 
 SCOPES = " ".join([
     "https://api.ebay.com/oauth/api_scope/sell.inventory",
@@ -42,7 +42,7 @@ async def connect():
     # Build eBay OAuth URL
     auth_url = "https://auth.ebay.com/oauth2/authorize?" + urlencode({
         "client_id":     EBAY_CLIENT_ID,
-        "redirect_uri":  EBAY_RUNAME,
+        "redirect_uri":  EBAY_REDIRECT_URI,
         "response_type": "code",
         "scope":         SCOPES,
         "prompt":        "login"
@@ -81,7 +81,7 @@ async def connect():
             data={
                 "grant_type":   "authorization_code",
                 "code":         code,
-                "redirect_uri": EBAY_RUNAME
+                "redirect_uri": EBAY_REDIRECT_URI
             }
         )
         tokens = token_res.json()
