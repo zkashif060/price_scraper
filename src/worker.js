@@ -36,6 +36,8 @@ export default {
           return this.corsResponse(await this.handleAddTestAsin(env, body));
         case "/api/remove-test-asin":
           return this.corsResponse(await this.handleRemoveTestAsin(env, body));
+        case "/api/add-test-set":
+          return this.corsResponse(await this.handleAddTestSet(env));
         case "/api/products":
           return this.corsResponse(await this.handleProducts(env));
         default:
@@ -78,7 +80,7 @@ export default {
     }
     // Remove any already-present pipeline path to avoid duplication.
     normalized = normalized.replace(/\/v2\/pipeline\/?$/i, "");
-    return normalized.replace(/\/+$/g, " ");
+    return normalized.replace(/\/+$/g, "");
   },
 
   async executeSQL(env, sql, args = []) {
@@ -310,6 +312,23 @@ export default {
     `, [asin]);
 
     return { ok: true };
+  },
+
+  async handleAddTestSet(env) {
+    const asins = [
+      'B0C3LX1RJD',
+      'B0FH9R1CN5',
+      'B0F18BMSRZ'
+    ];
+
+    for (const asin of asins) {
+      await this.executeSQL(env, `
+        INSERT OR REPLACE INTO products (asin, priority, created_at, updated_at)
+        VALUES (?, 'test', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `, [asin]);
+    }
+
+    return { ok: true, inserted: asins };
   },
 
   async handleRemoveTestAsin(env, body) {

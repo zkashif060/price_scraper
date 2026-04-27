@@ -389,7 +389,8 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
     <div class="cform">
       <input type="text" id="asinIn" placeholder="Enter ASIN — e.g. B08N5WRWNW" maxlength="10">
       <button class="btn-ebay" onclick="addTestAsin()">+ Add Test ASIN</button>
-      <div class="cform-hint">Add ASINs manually to test the Amazon scraper. They'll be marked as 'test' priority.</div>
+      <button class="btn-ebay" style="background:var(--blue);" onclick="seedTestAsins()">Seed 3 ASINs</button>
+      <div class="cform-hint">Add ASINs manually or seed the three test ASINs directly for immediate strategy testing.</div>
     </div>
     <div id="testList"><div class="empty">No test ASINs added yet.</div></div>
   </div>
@@ -764,14 +765,18 @@ async function loadTestAsins() {
     }
 
     el.innerHTML = "";
-    for (const [asin, price, in_stock, last_scraped, priority, status] of r.rows) {
+    for (const item of r.rows) {
+      const [asin, price, in_stock, last_scraped, priority, status] = Array.isArray(item)
+        ? item
+        : [item.asin, item.amazon_price ?? item.price, item.stock_status ?? item.in_stock, item.last_scraped ?? item.lastScraped, item.priority, item.status];
       const d = document.createElement("div");
       d.className = "test-row";
-      const priceStr = price ? `£${Number(price).toFixed(2)}` : "—";
+      const priceValue = price != null && !Number.isNaN(Number(price)) ? Number(price) : null;
+      const priceStr = priceValue != null ? `£${priceValue.toFixed(2)}` : "—";
       const statusClass = status === 'success' ? 'success' : status === 'error' ? 'error' : 'pending';
       const statusText = status === 'success' ? '✓' : status === 'error' ? '✗' : '⏳';
       d.innerHTML = `
-        <div class="test-asin">${asin}</div>
+        <div class="test-asin">${asin || '—'}</div>
         <div class="test-price">${priceStr}</div>
         <div class="test-status ${statusClass}">${statusText} ${status}</div>
         <div class="test-time">${ago(last_scraped)}</div>
@@ -835,12 +840,16 @@ async function loadProducts() {
       return;
     }
 
-    for (const [asin, price, stock, views, sales, priority, lastChecked] of r.rows) {
+    for (const item of r.rows) {
+      const [asin, price, stock, views, sales, priority, lastChecked] = Array.isArray(item)
+        ? item
+        : [item.asin, item.amazon_price ?? item.price, item.stock_status ?? item.stock, item.views_24h ?? item.views, item.sales_7d ?? item.sales, item.priority, item.last_checked ?? item.lastChecked];
       const d = document.createElement("div");
       d.className = "prod-row";
+      const priceValue = price != null && !Number.isNaN(Number(price)) ? Number(price) : null;
       d.innerHTML = `
-        <div class="prod-asin">${asin}</div>
-        <div class="prod-price">${price != null ? `£${Number(price).toFixed(2)}` : '—'}</div>
+        <div class="prod-asin">${asin || '—'}</div>
+        <div class="prod-price">${priceValue != null ? `£${priceValue.toFixed(2)}` : '—'}</div>
         <div class="prod-stock">${stock || 'unknown'}</div>
         <div class="prod-metric">${views != null ? views : '—'}</div>
         <div class="prod-metric">${sales != null ? sales : '—'}</div>
@@ -851,6 +860,19 @@ async function loadProducts() {
     }
   } catch (err) {
     document.getElementById("prodList").innerHTML = `<div class="empty">Error loading ASIN analytics: ${err.message}</div>`;
+  }
+}
+
+async function seedTestAsins() {
+  try {
+    await apiFetch("/api/add-test-set");
+    log("✓ Seeded 3 test ASINs", "ok");
+    await loadTestAsins();
+    await loadProducts();
+    await loadStats();
+  } catch (err) {
+    log(`✗ Failed to seed test ASINs: ${err.message}`, "err");
+    alert(`Failed to seed test ASINs: ${err.message}`);
   }
 }
 
