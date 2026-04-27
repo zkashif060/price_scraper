@@ -13,8 +13,8 @@ This repository hosts a static GitHub Pages dashboard and a Cloudflare Worker ba
 - `.github/workflows/deploy.yml` no longer injects secrets into the published page.
 
 ## Deployment notes
-1. Deploy the worker with `TURSO_URL`/`LIBSQL_URL`, `TURSO_TOKEN`/`LIBSQL_AUTH_TOKEN`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, and `EBAY_REDIRECT_URI` set as worker environment variables.
-2. Set `WORKER_URL`, `EBAY_CLIENT_ID`, and `EBAY_REDIRECT_URI` in `src/dashboard/index.html` before publishing.
+1. Deploy the worker with `TURSO_URL`/`LIBSQL_URL`, `TURSO_TOKEN`/`LIBSQL_AUTH_TOKEN`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, and `EBAY_RUNAME` set as worker environment variables.
+2. Set `WORKER_URL`, `EBAY_CLIENT_ID`, and `EBAY_RUNAME` in `src/dashboard/index.html` before publishing.
 3. Deploy the dashboard folder with GitHub Pages.
 
 ## Cloudflare worker secrets
@@ -23,7 +23,7 @@ You can add secrets in Cloudflare in two ways:
 - Cloudflare dashboard:
   1. Open your Worker in the Cloudflare dashboard.
   2. Go to `Variables > Environment variables`.
-  3. Add `TURSO_URL`, `TURSO_TOKEN`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, and `EBAY_REDIRECT_URI`.
+  3. Add `TURSO_URL`, `TURSO_TOKEN`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, and `EBAY_RUNAME`.
   4. Save the worker.
 
 - Wrangler CLI:
@@ -32,13 +32,13 @@ You can add secrets in Cloudflare in two ways:
   wrangler secret put TURSO_TOKEN
   wrangler secret put EBAY_CLIENT_ID
   wrangler secret put EBAY_CLIENT_SECRET
-  wrangler secret put EBAY_REDIRECT_URI
+  wrangler secret put EBAY_RUNAME
   ```
 
-In the worker, these are accessed as `env.TURSO_URL`, `env.TURSO_TOKEN`, `env.EBAY_CLIENT_ID`, `env.EBAY_CLIENT_SECRET`, and `env.EBAY_REDIRECT_URI`.
+In the worker, these are accessed as `env.TURSO_URL`, `env.TURSO_TOKEN`, `env.EBAY_CLIENT_ID`, `env.EBAY_CLIENT_SECRET`, and `env.EBAY_RUNAME`.
 
 ## Why this is safe
-- `EBAY_CLIENT_ID` and `EBAY_REDIRECT_URI` are not secret: they are public config values used for OAuth.
+- `EBAY_CLIENT_ID` and `EBAY_RUNAME` are not secret: they are public config values used for OAuth.
 - `EBAY_CLIENT_SECRET` is sensitive and must stay only in the worker environment.
 - `TURSO_URL` and `TURSO_TOKEN` are also sensitive and must not be exposed in `index.html`.
 
