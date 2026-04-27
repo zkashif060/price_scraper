@@ -64,15 +64,13 @@ export default {
 
   normalizeTursoUrl(url) {
     if (!url) return url;
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol === "libsql:") {
-        parsed.protocol = "https:";
-      }
-      return parsed.toString().replace(/\/+$|\?$/, "");
-    } catch {
-      return url;
+    let normalized = url;
+    if (normalized.startsWith("libsql://")) {
+      normalized = normalized.replace(/^libsql:\/\//, "https://");
     }
+    // Remove any already-present pipeline path to avoid duplication.
+    normalized = normalized.replace(/\/v2\/pipeline\/?$/i, "");
+    return normalized.replace(/\/+$/g, "");
   },
 
   async executeSQL(env, sql, args = []) {

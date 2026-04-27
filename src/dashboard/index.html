@@ -493,11 +493,11 @@ async function loadStats() {
     <div class="sc bp"><div class="sc-lbl">Backend</div><div class="sc-val">${backendStatus}</div><div class="sc-sub">worker + db</div></div>
   `;
 
-  const T = Math.max(tot, 1);
+  const totalPriority = Math.max(hot + warm + cold, 1);
   document.getElementById("pbWrap").innerHTML = `
     <div class="pb">
       <div class="pb-lbl"><span>🔴 Hot — every 2 hrs</span><span>${hot}</span></div>
-      <div class="pb-track"><div class="pb-fill hot" style="width:${(hot/T*100).toFixed(1)}%"></div></div>
+      <div class="pb-track"><div class="pb-fill hot" style="width:${(hot/totalPriority*100).toFixed(1)}%"></div></div>
     </div>
     <div class="pb">
       <div class="pb-lbl"><span>🟡 Warm — every 6 hrs</span><span>${warm}</span></div>
