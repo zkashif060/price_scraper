@@ -3,702 +3,727 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Arbitrage Dashboard</title>
+<title>arbi.track — Dashboard</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg:      #0a0a0f;
-  --surface: #111118;
-  --border:  #1e1e2e;
-  --border2: #2a2a3e;
-  --text:    #e2e2f0;
-  --muted:   #6b6b8a;
-  --accent:  #7c6af7;
-  --green:   #22c55e;
-  --red:     #ef4444;
-  --amber:   #f59e0b;
-  --blue:    #3b82f6;
-  --mono:    'JetBrains Mono', monospace;
-  --sans:    'Inter', system-ui, sans-serif;
+  --bg:      #07070f;
+  --surface: #0d0d1a;
+  --card:    #111120;
+  --border:  #1a1a2e;
+  --border2: #242440;
+  --text:    #e0e0f8;
+  --muted:   #52527a;
+  --dim:     #35355a;
+  --accent:  #6c63ff;
+  --accent2: #9d97ff;
+  --green:   #23d18b;
+  --red:     #ff4f4f;
+  --amber:   #ffaa33;
+  --blue:    #3da8ff;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'Syne', system-ui, sans-serif;
+  --r:       10px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
 
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  font-size: 14px;
-  line-height: 1.5;
-}
+/* ── Shell layout ── */
+.shell{display:flex;min-height:100vh}
 
-/* ── Layout ── */
-.shell { display: flex; min-height: 100vh; }
+/* ── Sidebar ── */
+.sidebar{
+  width:200px;flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+}
+.logo{padding:20px 18px 18px;border-bottom:1px solid var(--border)}
+.logo-mark{font-size:18px;font-weight:700;letter-spacing:-.5px}
+.logo-mark em{color:var(--accent2);font-style:normal}
+.logo-sub{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.nav{padding:8px 0;flex:1}
+.nav a{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 18px;
+  color:var(--muted);text-decoration:none;
+  font-size:12.5px;font-weight:500;
+  border-left:2px solid transparent;
+  transition:all .12s;
+}
+.nav a:hover{color:var(--text);background:rgba(108,99,255,.05)}
+.nav a.active{color:var(--accent2);border-left-color:var(--accent);background:rgba(108,99,255,.07)}
+.nav-ic{width:16px;text-align:center;font-size:13px;flex-shrink:0}
+.sb-foot{padding:14px 18px;border-top:1px solid var(--border)}
+.sb-status{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted);font-family:var(--mono)}
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 2s ease infinite;flex-shrink:0}
+.dot-err{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-.sidebar {
-  width: 220px;
-  flex-shrink: 0;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: 24px 0;
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-}
+/* ── Main ── */
+.main{flex:1;padding:26px 30px;overflow-x:hidden;max-width:calc(100vw - 200px)}
 
-.logo {
-  padding: 0 20px 24px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
+/* ── Alert banner ── */
+.alert{
+  display:none;
+  padding:12px 16px;margin-bottom:18px;
+  border-radius:var(--r);font-size:12px;
+  font-family:var(--mono);line-height:1.8;
 }
-.logo-mark {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: -0.3px;
-}
-.logo-mark span { color: var(--accent); }
-.logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-.nav a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 20px;
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all .15s;
-  border-left: 2px solid transparent;
-}
-.nav a:hover { color: var(--text); background: rgba(124,106,247,.06); }
-.nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(124,106,247,.08); }
-.nav .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-
-.main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 28px 32px;
-  max-width: 1100px;
-}
+.alert.show{display:block}
+.alert-warn{background:rgba(255,170,51,.07);border:1px solid rgba(255,170,51,.25);color:var(--amber)}
+.alert-err {background:rgba(255,79,79,.07); border:1px solid rgba(255,79,79,.25); color:var(--red)}
+.alert code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px}
 
 /* ── Page header ── */
-.page-hd {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap}
+.ph h1{font-size:21px;font-weight:700;letter-spacing:-.4px}
+.ph p{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.btn-ref{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 13px;
+  background:var(--card);border:1px solid var(--border2);border-radius:7px;
+  color:var(--muted);font-size:11.5px;font-family:var(--sans);
+  cursor:pointer;transition:all .12s;
 }
-.page-hd h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.2px; }
-.page-hd p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.btn-ref:hover{color:var(--text);border-color:var(--accent)}
 
-.refresh-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 7px;
-  color: var(--muted);
-  font-size: 12px;
-  font-family: var(--sans);
-  cursor: pointer;
-  transition: all .15s;
+/* ── Stats grid ── */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px;margin-bottom:18px}
+.sc{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:13px 15px;position:relative;overflow:hidden;transition:border-color .2s;
 }
-.refresh-btn:hover { color: var(--text); border-color: var(--accent); }
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--dim)}
+.sc:hover{border-color:var(--border2)}
+.sc.g::before{background:var(--green)}
+.sc.a::before{background:var(--amber)}
+.sc.b::before{background:var(--blue)}
+.sc.p::before{background:var(--accent)}
+.sc-lbl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-family:var(--mono)}
+.sc-val{font-size:28px;font-weight:700;font-family:var(--mono);margin:5px 0 2px;letter-spacing:-1.5px;line-height:1;color:var(--text)}
+.sc.g .sc-val{color:var(--green)}
+.sc.a .sc-val{color:var(--amber)}
+.sc.b .sc-val{color:var(--blue)}
+.sc.p .sc-val{color:var(--accent2)}
+.sc-sub{font-size:10px;color:var(--muted)}
 
-/* ── Stat cards ── */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  transition: border-color .2s;
-}
-.stat-card:hover { border-color: var(--border2); }
-.stat-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
-.stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  font-family: var(--mono);
-  margin: 6px 0 2px;
-  letter-spacing: -1px;
-  color: var(--text);
-}
-.stat-sub  { font-size: 11px; color: var(--muted); }
-.stat-card.green .stat-value { color: var(--green); }
-.stat-card.red   .stat-value { color: var(--red); }
-.stat-card.amber .stat-value { color: var(--amber); }
-.stat-card.blue  .stat-value { color: var(--blue); }
-.stat-card.accent .stat-value { color: var(--accent); }
-
-/* ── Section card ── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-.card-hd {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
-}
-.card-hd h2 { font-size: 13px; font-weight: 600; }
-.card-hd .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
-.badge-green  { background: rgba(34,197,94,.12);  color: var(--green); }
-.badge-red    { background: rgba(239,68,68,.12);   color: var(--red); }
-.badge-amber  { background: rgba(245,158,11,.12);  color: var(--amber); }
-.badge-blue   { background: rgba(59,130,246,.12);  color: var(--blue); }
-.badge-accent { background: rgba(124,106,247,.12); color: var(--accent); }
-.badge-muted  { background: rgba(107,107,138,.12); color: var(--muted); }
-
-/* ── Accounts list ── */
-.account-list { display: flex; flex-direction: column; }
-
-.account-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
-  transition: background .15s;
-}
-.account-row:last-child { border-bottom: none; }
-.account-row:hover { background: rgba(255,255,255,.02); }
-
-.account-avatar {
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  background: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.account-info { flex: 1; min-width: 0; }
-.account-name { font-weight: 500; font-size: 13px; }
-.account-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-.account-stats {
-  display: flex;
-  gap: 16px;
-  font-size: 11px;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-.account-stats strong { color: var(--text); font-family: var(--mono); }
-
-.status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
-.status-dot.error  { background: var(--red); }
-.status-dot.disconnected { background: var(--muted); }
-
-.disconnect-btn {
-  padding: 5px 10px;
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: 5px;
-  color: var(--muted);
-  font-size: 11px;
-  cursor: pointer;
-  font-family: var(--sans);
-  transition: all .15s;
-  flex-shrink: 0;
-}
-.disconnect-btn:hover { border-color: var(--red); color: var(--red); }
+/* ── Card ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.ch h2{font-size:12.5px;font-weight:600}
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;font-family:var(--mono)}
+.bg  {background:rgba(35,209,139,.1);color:var(--green);border:1px solid rgba(35,209,139,.2)}
+.br  {background:rgba(255,79,79,.1); color:var(--red);  border:1px solid rgba(255,79,79,.2)}
+.ba  {background:rgba(255,170,51,.1);color:var(--amber);border:1px solid rgba(255,170,51,.2)}
+.bb  {background:rgba(61,168,255,.1);color:var(--blue); border:1px solid rgba(61,168,255,.2)}
+.bp  {background:rgba(108,99,255,.1);color:var(--accent2);border:1px solid rgba(108,99,255,.2)}
+.bm  {background:rgba(82,82,122,.1); color:var(--muted);border:1px solid rgba(82,82,122,.2)}
 
 /* ── Connect form ── */
-.connect-form {
-  padding: 16px 18px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+.cform{
+  padding:13px 16px;
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  background:rgba(108,99,255,.025);
+  border-bottom:1px solid var(--border);
 }
-.connect-form input {
-  flex: 1;
-  min-width: 200px;
-  background: var(--bg);
-  border: 1px solid var(--border2);
-  border-radius: 7px;
-  padding: 8px 12px;
-  color: var(--text);
-  font-size: 13px;
-  font-family: var(--sans);
-  outline: none;
-  transition: border-color .15s;
+.cform input{
+  flex:1;min-width:160px;
+  background:var(--bg);border:1px solid var(--border2);border-radius:7px;
+  padding:8px 11px;color:var(--text);font-size:13px;font-family:var(--sans);
+  outline:none;transition:border-color .12s;
 }
-.connect-form input:focus { border-color: var(--accent); }
-.connect-form input::placeholder { color: var(--muted); }
+.cform input:focus{border-color:var(--accent)}
+.cform input::placeholder{color:var(--dim)}
+.btn-ebay{
+  padding:8px 16px;
+  background:var(--accent);border:none;border-radius:7px;
+  color:#fff;font-size:12.5px;font-weight:600;font-family:var(--sans);
+  cursor:pointer;white-space:nowrap;transition:opacity .12s,transform .1s;
+}
+.btn-ebay:hover{opacity:.85}
+.btn-ebay:active{transform:scale(.97)}
+.cform-hint{width:100%;font-size:10px;color:var(--muted);font-family:var(--mono)}
 
-.btn-connect {
-  padding: 8px 16px;
-  background: var(--accent);
-  border: none;
-  border-radius: 7px;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--sans);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity .15s;
+/* ── Accounts ── */
+.acc-list{display:flex;flex-direction:column}
+.acc-row{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  transition:background .12s;
 }
-.btn-connect:hover { opacity: .85; }
-
-/* ── Price changes feed ── */
-.change-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
+.acc-row:last-child{border-bottom:none}
+.acc-row:hover{background:rgba(255,255,255,.012)}
+.acc-av{
+  width:32px;height:32px;border-radius:7px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--mono);
 }
-.change-row:last-child { border-bottom: none; }
-.change-asin { font-family: var(--mono); font-size: 11px; color: var(--muted); width: 100px; flex-shrink: 0; }
-.change-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
-.change-price { font-family: var(--mono); font-size: 12px; flex-shrink: 0; }
-.change-price.up   { color: var(--green); }
-.change-price.down { color: var(--red); }
-.change-price.oos  { color: var(--amber); }
-.change-time { font-size: 11px; color: var(--muted); flex-shrink: 0; width: 60px; text-align: right; }
+.acc-info{flex:1;min-width:0}
+.acc-name{font-weight:600;font-size:12.5px}
+.acc-meta{font-size:10px;color:var(--muted);margin-top:1px;font-family:var(--mono)}
+.acc-nums{display:flex;gap:14px;font-size:10px;color:var(--muted);flex-shrink:0;font-family:var(--mono)}
+.acc-nums strong{color:var(--text)}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sdot.active{background:var(--green);box-shadow:0 0 5px var(--green)}
+.sdot.error,.sdot.token_error{background:var(--red)}
+.sdot.disconnected{background:var(--dim)}
+.btn-dis{
+  padding:4px 9px;background:transparent;
+  border:1px solid var(--border2);border-radius:5px;
+  color:var(--muted);font-size:10px;cursor:pointer;
+  font-family:var(--mono);transition:all .12s;flex-shrink:0;
+}
+.btn-dis:hover{border-color:var(--red);color:var(--red)}
 
-/* ── Priority breakdown ── */
-.priority-bar { padding: 16px 18px; }
-.pbar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
-.pbar-label span:last-child { color: var(--muted); font-family: var(--mono); }
-.pbar-track { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 10px; overflow: hidden; }
-.pbar-fill  { height: 100%; border-radius: 3px; transition: width .5s ease; }
-.pbar-fill.hot  { background: var(--red); }
-.pbar-fill.warm { background: var(--amber); }
-.pbar-fill.cold { background: var(--muted); }
+/* ── Price changes ── */
+.pc-row{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 16px;border-bottom:1px solid var(--border);font-size:11px;
+}
+.pc-row:last-child{border-bottom:none}
+.pc-asin{font-family:var(--mono);font-size:9.5px;color:var(--muted);width:90px;flex-shrink:0}
+.pc-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-price{font-family:var(--mono);font-size:10.5px;flex-shrink:0}
+.pc-price.up{color:var(--green)}
+.pc-price.dn{color:var(--red)}
+.pc-price.oo{color:var(--amber)}
+.pc-time{font-size:9.5px;color:var(--dim);flex-shrink:0;width:55px;text-align:right;font-family:var(--mono)}
+
+/* ── Priority bars ── */
+.pb-wrap{padding:15px 16px}
+.pb{margin-bottom:13px}
+.pb:last-child{margin-bottom:0}
+.pb-lbl{display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:4px;font-family:var(--mono)}
+.pb-lbl span:last-child{color:var(--muted)}
+.pb-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.pb-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.pb-fill.hot {background:linear-gradient(90deg,var(--red),#ff9090)}
+.pb-fill.warm{background:linear-gradient(90deg,var(--amber),#ffd580)}
+.pb-fill.cold{background:var(--dim)}
+.pb-est{font-size:9.5px;color:var(--muted);margin-top:11px;font-family:var(--mono);border-top:1px solid var(--border);padding-top:9px}
 
 /* ── Log ── */
-.log-wrap {
-  padding: 12px 18px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  max-height: 160px;
-  overflow-y: auto;
-  line-height: 1.8;
+.log{padding:10px 16px;font-family:var(--mono);font-size:10.5px;color:var(--muted);max-height:150px;overflow-y:auto;line-height:1.9}
+.log .ok  {color:var(--green)}
+.log .err {color:var(--red)}
+.log .info{color:var(--blue)}
+.log .warn{color:var(--amber)}
+
+/* ── Misc ── */
+.empty{text-align:center;padding:26px;color:var(--muted);font-size:11px;font-family:var(--mono)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:rot .5s linear infinite;vertical-align:middle}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ── eBay connect modal ── */
+.modal-bg{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  z-index:100;align-items:center;justify-content:center;
 }
-.log-wrap .ok   { color: var(--green); }
-.log-wrap .err  { color: var(--red); }
-.log-wrap .info { color: var(--blue); }
-
-/* ── Empty states ── */
-.empty { text-align: center; padding: 32px 18px; color: var(--muted); font-size: 13px; }
-
-/* ── Spinner ── */
-.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: rot .6s linear infinite; }
-@keyframes rot { to { transform: rotate(360deg); } }
+.modal-bg.show{display:flex}
+.modal{
+  background:var(--card);border:1px solid var(--border2);border-radius:14px;
+  padding:28px;width:100%;max-width:440px;margin:16px;
+}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:18px;font-family:var(--mono);line-height:1.7}
+.modal input{
+  width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;
+  padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--sans);
+  outline:none;margin-bottom:10px;transition:border-color .12s;
+}
+.modal input:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.btn-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border2);border-radius:7px;color:var(--muted);font-size:12px;font-family:var(--sans);cursor:pointer}
+.btn-cancel:hover{color:var(--text)}
+.btn-go{padding:8px 18px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:12px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity .12s}
+.btn-go:hover{opacity:.85}
+.modal-steps{margin:14px 0;display:flex;flex-direction:column;gap:6px}
+.step{display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);color:var(--muted)}
+.step-num{width:18px;height:18px;border-radius:50%;background:var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;color:var(--text)}
+.step.done .step-num{background:var(--green);color:#000}
+.step.active .step-num{background:var(--accent);color:#fff}
 </style>
 </head>
 <body>
 <div class="shell">
 
-  <!-- Sidebar -->
-  <nav class="sidebar">
-    <div class="logo">
-      <div class="logo-mark">arbi<span>.</span>track</div>
-      <div class="logo-sub">eBay arbitrage system</div>
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">arbi<em>.</em>track</div>
+    <div class="logo-sub">price automation</div>
+  </div>
+  <div class="nav">
+    <a href="#top" class="active"><span class="nav-ic">⬡</span> Overview</a>
+    <a href="#accounts"><span class="nav-ic">◈</span> Accounts</a>
+    <a href="#changes"><span class="nav-ic">△</span> Prices</a>
+    <a href="#priorities"><span class="nav-ic">◎</span> Priorities</a>
+  </div>
+  <div class="sb-foot">
+    <div class="sb-status">
+      <span id="dotEl" class="dot-live"></span>
+      <span id="sbStatus">connecting...</span>
     </div>
-    <div class="nav">
-      <a href="#" class="active"><span class="dot"></span>Dashboard</a>
-      <a href="#accounts"><span class="dot"></span>Accounts</a>
-      <a href="#changes"><span class="dot"></span>Price changes</a>
-      <a href="#priorities"><span class="dot"></span>Priorities</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="main" id="top">
+
+  <!-- Config warning -->
+  <div class="alert alert-warn" id="alertConfig">
+    ⚠ Dashboard not configured — open <code>index.html</code> and fill in the <code>CONFIG</code> block at the top of the script.
+  </div>
+
+  <!-- DB error -->
+  <div class="alert alert-err" id="alertDB"></div>
+
+  <!-- Header -->
+  <div class="ph">
+    <div>
+      <h1>Dashboard</h1>
+      <p id="tsEl">Loading...</p>
     </div>
-  </nav>
+    <button class="btn-ref" onclick="loadAll()">
+      <span id="refIc">↻</span> Refresh
+    </button>
+  </div>
 
-  <!-- Main -->
-  <main class="main">
+  <!-- Stats -->
+  <div class="sg" id="sg">
+    <div class="sc p"><div class="sc-lbl">Accounts</div><div class="sc-val"><span class="spin"></span></div><div class="sc-sub">—</div></div>
+    <div class="sc">  <div class="sc-lbl">Listings</div><div class="sc-val"><span class="spin"></span></div><div class="sc-sub">—</div></div>
+    <div class="sc">  <div class="sc-lbl">ASINs</div><div class="sc-val"><span class="spin"></span></div><div class="sc-sub">—</div></div>
+    <div class="sc g"><div class="sc-lbl">Updated today</div><div class="sc-val"><span class="spin"></span></div><div class="sc-sub">—</div></div>
+    <div class="sc a"><div class="sc-lbl">OOS paused</div><div class="sc-val"><span class="spin"></span></div><div class="sc-sub">—</div></div>
+    <div class="sc b"><div class="sc-lbl">Restored</div><div class="sc-val"><span class="spin"></span></div><div class="sc-sub">—</div></div>
+  </div>
 
-    <!-- Header -->
-    <div class="page-hd">
-      <div>
-        <h1>Dashboard</h1>
-        <p id="lastRefresh">Loading...</p>
+  <!-- Accounts card -->
+  <div class="card" id="accounts">
+    <div class="ch">
+      <h2>Connected accounts</h2>
+      <span class="badge bm" id="accBadge">—</span>
+    </div>
+    <div class="cform">
+      <input type="text" id="labelIn" placeholder="Account label — e.g. Store UK 1" maxlength="50">
+      <button class="btn-ebay" onclick="openConnectModal()">+ Connect eBay</button>
+      <div class="cform-hint">eBay will open in a new tab. Paste the redirect URL back here to complete the connection.</div>
+    </div>
+    <div class="acc-list" id="accList"><div class="empty">Loading...</div></div>
+  </div>
+
+  <!-- Price changes -->
+  <div class="card" id="changes">
+    <div class="ch">
+      <h2>Recent price changes</h2>
+      <span class="badge bg" id="chBadge">today</span>
+    </div>
+    <div id="chList"><div class="empty">Loading...</div></div>
+  </div>
+
+  <!-- Priority breakdown -->
+  <div class="card" id="priorities">
+    <div class="ch">
+      <h2>Keepa priority breakdown</h2>
+      <span class="badge bp">€49 plan</span>
+    </div>
+    <div class="pb-wrap" id="pbWrap"><div class="empty">Loading...</div></div>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="ch"><h2>Activity log</h2></div>
+    <div class="log" id="logEl"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- Connect modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3>Connect eBay account</h3>
+    <p>
+      Because this dashboard runs as a static page, the token exchange
+      happens via a GitHub Actions workflow. Follow the steps below.
+    </p>
+
+    <div class="modal-steps">
+      <div class="step active" id="step1">
+        <div class="step-num">1</div>
+        <span>Click "Open eBay" — log in and copy the redirect URL</span>
       </div>
-      <button class="refresh-btn" onclick="loadAll()">
-        <span id="refreshIcon">↻</span> Refresh
-      </button>
-    </div>
-
-    <!-- Stat cards -->
-    <div class="stats-grid" id="statsGrid">
-      <div class="stat-card"><div class="stat-label">Accounts</div><div class="stat-value"><span class="spin"></span></div></div>
-      <div class="stat-card"><div class="stat-label">Listings</div><div class="stat-value"><span class="spin"></span></div></div>
-      <div class="stat-card"><div class="stat-label">ASINs tracked</div><div class="stat-value"><span class="spin"></span></div></div>
-      <div class="stat-card green"><div class="stat-label">Prices updated today</div><div class="stat-value"><span class="spin"></span></div></div>
-      <div class="stat-card amber"><div class="stat-label">OOS paused today</div><div class="stat-value"><span class="spin"></span></div></div>
-      <div class="stat-card blue"><div class="stat-label">Restored today</div><div class="stat-value"><span class="spin"></span></div></div>
-    </div>
-
-    <!-- Accounts -->
-    <div class="card" id="accounts">
-      <div class="card-hd">
-        <h2>Connected accounts</h2>
-        <span class="badge badge-muted" id="accountBadge">—</span>
+      <div class="step" id="step2">
+        <div class="step-num">2</div>
+        <span>Paste the full redirect URL below</span>
       </div>
-      <!-- Connect form -->
-      <div class="connect-form">
-        <input type="text" id="labelInput" placeholder="Account label — e.g. Store UK 1">
-        <button class="btn-connect" onclick="startConnect()">+ Connect eBay account</button>
-      </div>
-      <div class="account-list" id="accountList">
-        <div class="empty">Loading accounts...</div>
+      <div class="step" id="step3">
+        <div class="step-num">3</div>
+        <span>Token saved to database via GitHub Actions</span>
       </div>
     </div>
 
-    <!-- Price changes -->
-    <div class="card" id="changes">
-      <div class="card-hd">
-        <h2>Recent price changes</h2>
-        <span class="badge badge-green" id="changesBadge">today</span>
-      </div>
-      <div id="changesList"><div class="empty">Loading...</div></div>
-    </div>
+    <input type="text" id="redirectUrlIn"
+      placeholder="https://your-redirect-url.com/?code=v%5E1.1%23i%5E1..."
+      style="display:none">
 
-    <!-- Priority breakdown -->
-    <div class="card" id="priorities">
-      <div class="card-hd">
-        <h2>Keepa priority breakdown</h2>
-        <span class="badge badge-accent">€49 plan</span>
-      </div>
-      <div class="priority-bar" id="priorityBars">
-        <div class="empty">Loading...</div>
-      </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-go" id="modalBtn" onclick="modalAction()">Open eBay →</button>
     </div>
-
-    <!-- Activity log -->
-    <div class="card">
-      <div class="card-hd"><h2>Activity log</h2></div>
-      <div class="log-wrap" id="logWrap"></div>
-    </div>
-
-  </main>
+  </div>
 </div>
 
 <script>
-// ── Config — EDIT THESE ───────────────────────────────────────────────────────
-const TURSO_URL   = "YOUR_TURSO_HTTP_URL";    // https://xxx.turso.io
-const TURSO_TOKEN = "YOUR_TURSO_AUTH_TOKEN";  // your turso auth token
+// ════════════════════════════════════════════════════
+// ⚠  EDIT THESE VALUES — nothing else needs changing
+// ════════════════════════════════════════════════════
+const CONFIG = {
+  WORKER_URL:     "https://cloudflare.zkashif040.workers.dev/",
+  EBAY_CLIENT_ID: "ZainUlla-OrderShe-PRD-bb4718a3a-1ad185dd",
+  EBAY_RUNAME:    "Zain_Ullah-ZainUlla-OrderS-geqxfp"
+};
+// EBAY_CLIENT_ID and EBAY_RUNAME are safe to keep in the public dashboard.
+// EBAY_CLIENT_SECRET, TURSO_URL and TURSO_TOKEN must remain in Cloudflare Worker env vars only.
+// This page does not store Turso or eBay secrets directly. The worker holds them safely.
+// ════════════════════════════════════════════════════
 
-// eBay OAuth config (for Connect button)
-const EBAY_CLIENT_ID = "YOUR_EBAY_CLIENT_ID";
-const EBAY_RUNAME    = "YOUR_EBAY_RUNAME";
 const SCOPES = [
   "https://api.ebay.com/oauth/api_scope/sell.inventory",
   "https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly",
   "https://api.ebay.com/oauth/api_scope/sell.analytics.readonly"
 ].join(" ");
 
-// ── Turso query helper ────────────────────────────────────────────────────────
-async function query(sql, args = []) {
-  const res = await fetch(`${TURSO_URL}/v2/pipeline`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${TURSO_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      requests: [{
-        type: "execute",
-        stmt: { sql, args: args.map(v => ({ type: "text", value: String(v) })) }
-      }]
-    })
-  });
-  const data = await res.json();
-  const result = data.results?.[0]?.response?.result;
-  return {
-    cols: (result?.cols || []).map(c => c.name),
-    rows: (result?.rows || []).map(r => r.map(c => c.value))
-  };
+let modalStep = 1;
+
+// ── Config check ──────────────────────────────────────────────────────────────
+function isConfigured() {
+  return ![
+    CONFIG.WORKER_URL,
+    CONFIG.EBAY_CLIENT_ID,
+    CONFIG.EBAY_RUNAME
+  ].some(v => !v || v.startsWith("YOUR_"));
 }
 
-// ── Log helper ────────────────────────────────────────────────────────────────
+async function apiFetch(path, payload = {}) {
+  const res = await fetch(`${CONFIG.WORKER_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || `Worker ${res.status}`);
+  }
+  return data;
+}
+
+// ── Log ───────────────────────────────────────────────────────────────────────
 function log(msg, type = "info") {
-  const el = document.getElementById("logWrap");
+  const el = document.getElementById("logEl");
   const d  = document.createElement("div");
   d.className = type;
   d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
   el.prepend(d);
-  if (el.children.length > 40) el.lastChild.remove();
+  while (el.children.length > 60) el.lastChild.remove();
 }
 
-// ── Time formatter ────────────────────────────────────────────────────────────
-function timeAgo(iso) {
+// ── Time ago ──────────────────────────────────────────────────────────────────
+function ago(iso) {
   if (!iso) return "never";
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
+  const d = Date.now() - new Date(iso).getTime();
+  if (isNaN(d)) return "—";
+  const m = Math.floor(d / 60000);
   if (m < 1)  return "just now";
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h/24)}d ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 // ── Load stats ────────────────────────────────────────────────────────────────
 async function loadStats() {
   const today = new Date().toISOString().split("T")[0];
 
-  const [accounts, listings, products, changes] = await Promise.all([
-    query("SELECT COUNT(*) FROM ebay_accounts WHERE status='active'"),
-    query("SELECT COUNT(*) FROM listings WHERE status='active'"),
-    query("SELECT COUNT(*), priority FROM products GROUP BY priority"),
-    query(`SELECT change_type, COUNT(*) FROM price_changes WHERE changed_at >= ? GROUP BY change_type`, [today])
-  ]);
+  const stats = await apiFetch("/api/stats", { today });
 
-  const totalAccounts = accounts.rows[0]?.[0] || 0;
-  const totalListings = listings.rows[0]?.[0] || 0;
+  const totalAcc  = Number(stats.totalAccounts || 0);
+  const totalList = Number(stats.totalListings || 0);
 
-  let totalAsins = 0, hotAsins = 0, warmAsins = 0, coldAsins = 0;
-  for (const row of products.rows) {
-    const [count, priority] = row;
-    totalAsins += Number(count);
-    if (priority === "hot")  hotAsins  = Number(count);
-    if (priority === "warm") warmAsins = Number(count);
-    if (priority === "cold") coldAsins = Number(count);
+  let tot = 0, hot = 0, warm = 0, cold = 0;
+  for (const [pr, cnt] of p.rows) {
+    const n = Number(cnt);
+    tot += n;
+    if (pr === "hot")  hot  = n;
+    if (pr === "warm") warm = n;
+    if (pr === "cold") cold = n;
   }
 
-  let priceUpdates = 0, oosCount = 0, restoredCount = 0;
-  for (const row of changes.rows) {
-    const [type, count] = row;
-    if (type === "up" || type === "down") priceUpdates += Number(count);
-    if (type === "out_of_stock") oosCount = Number(count);
-    if (type === "restored") restoredCount = Number(count);
+  let upd = 0, oos = 0, rst = 0;
+  for (const [tp, cnt] of c.rows) {
+    const n = Number(cnt);
+    if (tp === "up" || tp === "down") upd += n;
+    if (tp === "out_of_stock")        oos  = n;
+    if (tp === "restored")            rst  = n;
   }
 
-  // Render stat cards
-  const grid = document.getElementById("statsGrid");
-  grid.innerHTML = `
-    <div class="stat-card accent">
-      <div class="stat-label">Accounts</div>
-      <div class="stat-value">${totalAccounts}</div>
-      <div class="stat-sub">connected</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Active listings</div>
-      <div class="stat-value">${totalListings.toLocaleString()}</div>
-      <div class="stat-sub">across all accounts</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">ASINs tracked</div>
-      <div class="stat-value">${totalAsins.toLocaleString()}</div>
-      <div class="stat-sub">${hotAsins} hot · ${warmAsins} warm · ${coldAsins} cold</div>
-    </div>
-    <div class="stat-card green">
-      <div class="stat-label">Prices updated today</div>
-      <div class="stat-value">${priceUpdates}</div>
-      <div class="stat-sub">via Keepa + eBay API</div>
-    </div>
-    <div class="stat-card amber">
-      <div class="stat-label">OOS paused today</div>
-      <div class="stat-value">${oosCount}</div>
-      <div class="stat-sub">out of stock on Amazon</div>
-    </div>
-    <div class="stat-card blue">
-      <div class="stat-label">Restored today</div>
-      <div class="stat-value">${restoredCount}</div>
-      <div class="stat-sub">back in stock</div>
-    </div>
+  document.getElementById("sg").innerHTML = `
+    <div class="sc p"><div class="sc-lbl">Accounts</div><div class="sc-val">${totalAcc}</div><div class="sc-sub">connected</div></div>
+    <div class="sc"> <div class="sc-lbl">Listings</div><div class="sc-val">${totalList.toLocaleString()}</div><div class="sc-sub">all accounts</div></div>
+    <div class="sc"> <div class="sc-lbl">ASINs</div><div class="sc-val">${tot.toLocaleString()}</div><div class="sc-sub">${hot} hot · ${warm} warm · ${cold} cold</div></div>
+    <div class="sc g"><div class="sc-lbl">Updated today</div><div class="sc-val">${upd}</div><div class="sc-sub">price changes</div></div>
+    <div class="sc a"><div class="sc-lbl">OOS paused</div><div class="sc-val">${oos}</div><div class="sc-sub">out of stock</div></div>
+    <div class="sc b"><div class="sc-lbl">Restored</div><div class="sc-val">${rst}</div><div class="sc-sub">back in stock</div></div>
   `;
 
-  // Priority bars
-  const bars = document.getElementById("priorityBars");
-  const total = Math.max(totalAsins, 1);
-  bars.innerHTML = `
-    <div class="pbar-label"><span>🔴 Hot — checked every 2 hrs</span><span>${hotAsins} ASINs</span></div>
-    <div class="pbar-track"><div class="pbar-fill hot" style="width:${(hotAsins/total*100).toFixed(1)}%"></div></div>
-    <div class="pbar-label"><span>🟡 Warm — checked every 6 hrs</span><span>${warmAsins} ASINs</span></div>
-    <div class="pbar-track"><div class="pbar-fill warm" style="width:${(warmAsins/total*100).toFixed(1)}%"></div></div>
-    <div class="pbar-label"><span>⚪ Cold — skipped (no views/sales)</span><span>${coldAsins} ASINs</span></div>
-    <div class="pbar-track"><div class="pbar-fill cold" style="width:${(coldAsins/total*100).toFixed(1)}%"></div></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px;">
-      Keepa €49 plan: ~${((hotAsins*12 + warmAsins*4) * 30).toLocaleString()} tokens/month estimated
+  const T = Math.max(tot, 1);
+  document.getElementById("pbWrap").innerHTML = `
+    <div class="pb">
+      <div class="pb-lbl"><span>🔴 Hot — every 2 hrs</span><span>${hot}</span></div>
+      <div class="pb-track"><div class="pb-fill hot" style="width:${(hot/T*100).toFixed(1)}%"></div></div>
+    </div>
+    <div class="pb">
+      <div class="pb-lbl"><span>🟡 Warm — every 6 hrs</span><span>${warm}</span></div>
+      <div class="pb-track"><div class="pb-fill warm" style="width:${(warm/T*100).toFixed(1)}%"></div></div>
+    </div>
+    <div class="pb">
+      <div class="pb-lbl"><span>⚪ Cold — skipped</span><span>${cold}</span></div>
+      <div class="pb-track"><div class="pb-fill cold" style="width:${(cold/T*100).toFixed(1)}%"></div></div>
+    </div>
+    <div class="pb-est">
+      Est. Keepa tokens/month: ~${((hot*12+warm*4)*30).toLocaleString()} / 864,000 on €49 plan
     </div>
   `;
 }
 
 // ── Load accounts ─────────────────────────────────────────────────────────────
 async function loadAccounts() {
-  const result = await query(`
-    SELECT a.account_id, a.ebay_username, a.status, a.connected_at, a.last_synced,
-           COUNT(l.id) as listing_count
-    FROM ebay_accounts a
-    LEFT JOIN listings l ON l.account_id = a.account_id AND l.status = 'active'
-    GROUP BY a.account_id
-    ORDER BY a.connected_at DESC
-  `);
+  const r = await apiFetch("/api/accounts");
 
-  const container = document.getElementById("accountList");
-  document.getElementById("accountBadge").textContent = `${result.rows.length} accounts`;
+  document.getElementById("accBadge").textContent = `${r.rows.length} accounts`;
+  const el = document.getElementById("accList");
 
-  if (!result.rows.length) {
-    container.innerHTML = '<div class="empty">No accounts connected. Use the form above to connect your first eBay account.</div>';
+  if (!r.rows.length) {
+    el.innerHTML = `<div class="empty">No accounts connected yet. Click "+ Connect eBay" above.</div>`;
     return;
   }
 
-  container.innerHTML = "";
-  for (const row of result.rows) {
-    const [accountId, ebayUser, status, connectedAt, lastSynced, listingCount] = row;
-    const initial = (accountId || "?")[0].toUpperCase();
-
-    const div = document.createElement("div");
-    div.className = "account-row";
-    div.innerHTML = `
-      <div class="account-avatar">${initial}</div>
-      <div class="account-info">
-        <div class="account-name">${accountId}</div>
-        <div class="account-meta">eBay: ${ebayUser || "—"} · Connected ${timeAgo(connectedAt)}</div>
+  el.innerHTML = "";
+  for (const [id, user, status, connAt, syncAt, cnt] of r.rows) {
+    const d = document.createElement("div");
+    d.className = "acc-row";
+    d.innerHTML = `
+      <div class="acc-av">${(id||"?")[0].toUpperCase()}</div>
+      <div class="acc-info">
+        <div class="acc-name">${id}</div>
+        <div class="acc-meta">@${user||"—"} · connected ${ago(connAt)}</div>
       </div>
-      <div class="account-stats">
-        <div><strong>${Number(listingCount).toLocaleString()}</strong> listings</div>
-        <div>synced ${timeAgo(lastSynced)}</div>
+      <div class="acc-nums">
+        <div><strong>${Number(cnt).toLocaleString()}</strong> listings</div>
+        <div>synced ${ago(syncAt)}</div>
       </div>
-      <span class="badge badge-${status === 'active' ? 'green' : 'red'}">${status}</span>
-      <div class="status-dot ${status}"></div>
-      <button class="disconnect-btn" onclick="disconnect('${accountId}')">Disconnect</button>
+      <span class="badge ${status==='active'?'bg':'br'}">${status}</span>
+      <div class="sdot ${status}"></div>
+      <button class="btn-dis" onclick="disconnect('${id}')">Disconnect</button>
     `;
-    container.appendChild(div);
+    el.appendChild(d);
   }
 }
 
 // ── Load price changes ────────────────────────────────────────────────────────
 async function loadChanges() {
   const today = new Date().toISOString().split("T")[0];
-  const result = await query(`
-    SELECT pc.asin, pc.sku, pc.old_price, pc.new_price, pc.change_type,
-           pc.changed_at, pc.account_id, l.title
-    FROM price_changes pc
-    LEFT JOIN listings l ON l.sku = pc.sku AND l.account_id = pc.account_id
-    WHERE pc.changed_at >= ?
-    ORDER BY pc.changed_at DESC
-    LIMIT 50
-  `, [today]);
+  const r = await apiFetch("/api/changes", { today });
 
-  const container = document.getElementById("changesList");
-  document.getElementById("changesBadge").textContent = `${result.rows.length} today`;
+  document.getElementById("chBadge").textContent = `${r.rows.length} today`;
+  const el = document.getElementById("chList");
 
-  if (!result.rows.length) {
-    container.innerHTML = '<div class="empty">No price changes today yet.</div>';
+  if (!r.rows.length) {
+    el.innerHTML = `<div class="empty">No price changes today yet.</div>`;
     return;
   }
 
-  container.innerHTML = "";
-  for (const row of result.rows) {
-    const [asin, sku, oldPrice, newPrice, changeType, changedAt, accountId, title] = row;
-    const div = document.createElement("div");
-    div.className = "change-row";
-
-    let priceHtml = "";
-    if (changeType === "out_of_stock") {
-      priceHtml = `<span class="change-price oos">OOS paused</span>`;
-    } else if (changeType === "restored") {
-      priceHtml = `<span class="change-price up">Restored £${Number(newPrice).toFixed(2)}</span>`;
-    } else {
-      const up = Number(newPrice) > Number(oldPrice);
-      priceHtml = `<span class="change-price ${up ? 'up' : 'down'}">
-        ${up ? '▲' : '▼'} £${Number(oldPrice).toFixed(2)} → £${Number(newPrice).toFixed(2)}
-      </span>`;
+  el.innerHTML = "";
+  for (const [asin, sku, oldP, newP, tp, ts, title] of r.rows) {
+    const d = document.createElement("div");
+    d.className = "pc-row";
+    let ph;
+    if (tp === "out_of_stock") ph = `<span class="pc-price oo">⏸ OOS</span>`;
+    else if (tp === "restored") ph = `<span class="pc-price up">▲ £${Number(newP).toFixed(2)}</span>`;
+    else {
+      const up = Number(newP) > Number(oldP);
+      ph = `<span class="pc-price ${up?'up':'dn'}">${up?'▲':'▼'} £${Number(oldP).toFixed(2)}→£${Number(newP).toFixed(2)}</span>`;
     }
-
-    div.innerHTML = `
-      <div class="change-asin">${asin || sku?.substring(0,10)}</div>
-      <div class="change-title">${title || sku || "—"}</div>
-      ${priceHtml}
-      <div class="change-time">${timeAgo(changedAt)}</div>
+    d.innerHTML = `
+      <div class="pc-asin">${asin||(sku||"").slice(0,10)}</div>
+      <div class="pc-title">${title||sku||"—"}</div>
+      ${ph}
+      <div class="pc-time">${ago(ts)}</div>
     `;
-    container.appendChild(div);
+    el.appendChild(d);
   }
 }
 
-// ── Connect eBay account ──────────────────────────────────────────────────────
-function startConnect() {
-  const label = document.getElementById("labelInput").value.trim();
+// ── eBay connect — multi-step modal ──────────────────────────────────────────
+function openConnectModal() {
+  const label = document.getElementById("labelIn").value.trim();
   if (!label) { alert("Enter an account label first."); return; }
-  sessionStorage.setItem("pendingLabel", label);
 
-  const authUrl = "https://auth.ebay.com/oauth2/authorize?" + new URLSearchParams({
-    client_id: EBAY_CLIENT_ID, redirect_uri: EBAY_RUNAME,
-    response_type: "code", scope: SCOPES, prompt: "login"
-  });
+  if (!isConfigured()) {
+    alert("Fill in the CONFIG values in index.html first.");
+    return;
+  }
 
-  log(`Redirecting to eBay for: ${label}`);
-  window.location.href = authUrl;
+  modalStep = 1;
+  document.getElementById("step1").className = "step active";
+  document.getElementById("step2").className = "step";
+  document.getElementById("step3").className = "step";
+  document.getElementById("redirectUrlIn").style.display = "none";
+  document.getElementById("redirectUrlIn").value = "";
+  document.getElementById("modalBtn").textContent = "Open eBay →";
+  document.getElementById("modalBg").classList.add("show");
 }
 
-// ── Handle OAuth callback ─────────────────────────────────────────────────────
-async function handleCallback() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("code");
-  if (!code) return;
-  window.history.replaceState({}, "", window.location.pathname);
-
-  const label = sessionStorage.getItem("pendingLabel") || "Account";
-  sessionStorage.removeItem("pendingLabel");
-  log(`Exchanging token for "${label}"...`);
-
-  // NOTE: Token exchange must go through a server to keep client_secret safe.
-  // Deploy the exchange endpoint to Cloudflare Workers or use connect_ebay.py locally.
-  // If you have a worker deployed, call it here:
-  // const res = await fetch("https://your-worker.workers.dev/api/exchange-token", {...})
-  log(`Token received for "${label}". Run connect_ebay.py to save to database, or deploy worker endpoint.`, "info");
+function closeModal() {
+  document.getElementById("modalBg").classList.remove("show");
+  modalStep = 1;
 }
 
-// ── Disconnect ────────────────────────────────────────────────────────────────
+async function modalAction() {
+  const label = document.getElementById("labelIn").value.trim();
+
+  if (modalStep === 1) {
+    // Step 1 — open eBay auth in new tab
+    const authUrl = "https://auth.ebay.com/oauth2/authorize?" + new URLSearchParams({
+      client_id:     CONFIG.EBAY_CLIENT_ID,
+      redirect_uri:  CONFIG.EBAY_RUNAME,
+      response_type: "code",
+      scope:         SCOPES,
+      prompt:        "login"
+    });
+
+    window.open(authUrl, "_blank");
+
+    // Move to step 2
+    modalStep = 2;
+    document.getElementById("step1").className = "step done";
+    document.getElementById("step2").className = "step active";
+    document.getElementById("redirectUrlIn").style.display = "block";
+    document.getElementById("redirectUrlIn").focus();
+    document.getElementById("modalBtn").textContent = "Save token →";
+    return;
+  }
+
+  if (modalStep === 2) {
+    // Step 2 — extract code from redirect URL and trigger GitHub Action
+    const redirectUrl = document.getElementById("redirectUrlIn").value.trim();
+    if (!redirectUrl) {
+      alert("Paste the full redirect URL first.");
+      return;
+    }
+
+    let code;
+    try {
+      const urlObj = new URL(redirectUrl);
+      code = urlObj.searchParams.get("code");
+    } catch {
+      // Try parsing as query string directly
+      const params = new URLSearchParams(redirectUrl.includes("?") ? redirectUrl.split("?")[1] : redirectUrl);
+      code = params.get("code");
+    }
+
+    if (!code) {
+      alert("Could not find the auth code in that URL. Make sure you copied the full redirect URL.");
+      return;
+    }
+
+    document.getElementById("modalBtn").textContent = "Saving...";
+    document.getElementById("modalBtn").disabled = true;
+
+    try {
+      // Trigger GitHub Actions workflow to exchange token safely
+      const data = await apiFetch("/api/exchange-token", { label, code });
+
+      modalStep = 3;
+      document.getElementById("step2").className = "step done";
+      document.getElementById("step3").className = "step active";
+      document.getElementById("modalBtn").textContent = "Done ✓";
+
+      log(`✓ Connected ${data.ebay_username || label} — token saved securely`, "ok");
+
+      // Wait 30s then reload accounts
+      setTimeout(async () => {
+        closeModal();
+        document.getElementById("labelIn").value = "";
+        await loadAccounts();
+        log("Accounts reloaded", "ok");
+      }, 30000);
+
+    } catch (err) {
+      document.getElementById("modalBtn").textContent = "Save token →";
+      document.getElementById("modalBtn").disabled = false;
+      log(`✗ Failed: ${err.message}`, "err");
+      alert(`Failed to trigger token exchange: ${err.message}`);
+    }
+  }
+}
+
+// ── Disconnect account ────────────────────────────────────────────────────────
 async function disconnect(accountId) {
-  if (!confirm(`Disconnect "${accountId}"? Listing data is kept.`)) return;
-  await query("UPDATE ebay_accounts SET status='disconnected' WHERE account_id=?", [accountId]);
-  log(`Disconnected: ${accountId}`, "info");
-  await loadAll();
+  if (!confirm(`Disconnect "${accountId}"?\nListing data is kept.`)) return;
+  try {
+    await apiFetch("/api/disconnect", { account_id: accountId });
+    log(`Disconnected: ${accountId}`, "info");
+    await loadAccounts();
+  } catch (err) {
+    log(`Error: ${err.message}`, "err");
+  }
 }
 
 // ── Load all ──────────────────────────────────────────────────────────────────
 async function loadAll() {
-  document.getElementById("refreshIcon").textContent = "⏳";
+  // Show config warning if not set up
+  const cfgBanner = document.getElementById("alertConfig");
+  if (!isConfigured()) {
+    cfgBanner.classList.add("show");
+    document.getElementById("dotEl").className = "dot-err";
+    document.getElementById("sbStatus").textContent = "not configured";
+    return;
+  }
+  cfgBanner.classList.remove("show");
+
+  document.getElementById("refIc").textContent = "⏳";
+
   try {
     await Promise.all([loadStats(), loadAccounts(), loadChanges()]);
-    document.getElementById("lastRefresh").textContent =
-      `Last updated ${new Date().toLocaleTimeString()}`;
+    document.getElementById("tsEl").textContent = `updated ${new Date().toLocaleTimeString()}`;
+    document.getElementById("dotEl").className = "dot-live";
+    document.getElementById("sbStatus").textContent = "live";
+    document.getElementById("alertDB").classList.remove("show");
     log("Dashboard refreshed", "ok");
   } catch (err) {
-    log(`Load error: ${err.message}`, "err");
+    document.getElementById("dotEl").className = "dot-err";
+    document.getElementById("sbStatus").textContent = "error";
+    document.getElementById("alertDB").textContent = `✗ ${err.message}`;
+    document.getElementById("alertDB").classList.add("show");
+    log(`Error: ${err.message}`, "err");
   }
-  document.getElementById("refreshIcon").textContent = "↻";
+
+  document.getElementById("refIc").textContent = "↻";
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-handleCallback();
 loadAll();
-setInterval(loadAll, 60000); // Auto-refresh every minute
+setInterval(loadAll, 60000);
 </script>
 </body>
 </html>
