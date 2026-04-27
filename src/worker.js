@@ -62,8 +62,22 @@ export default {
     return env.TURSO_TOKEN || env.LIBSQL_AUTH_TOKEN;
   },
 
+  normalizeTursoUrl(url) {
+    if (!url) return url;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === "libsql:") {
+        parsed.protocol = "https:";
+      }
+      return parsed.toString().replace(/\/+$|\?$/, "");
+    } catch {
+      return url;
+    }
+  },
+
   async executeSQL(env, sql, args = []) {
-    const url = this.getTursoUrl(env);
+    const rawUrl = this.getTursoUrl(env);
+    const url = this.normalizeTursoUrl(rawUrl);
     const token = this.getTursoToken(env);
     if (!url || !token) {
       const missing = [];
@@ -130,7 +144,7 @@ export default {
       if (changeType === "restored") restoredCount = n;
     }
 
-    return { totalAccounts, totalListings, hotAsins, warmAsins, coldAsins, priceUpdates, oosCount, restoredCount };
+    return { totalAccounts, totalListings, hotAsins, warmAsins, coldAsins, priceUpdates, oosCount, restoredCount, backendStatus: "Online" };
   },
 
   async handleAccounts(env) {
