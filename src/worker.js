@@ -38,6 +38,8 @@ export default {
           return this.corsResponse(await this.handleRemoveTestAsin(env, body));
         case "/api/add-test-set":
           return this.corsResponse(await this.handleAddTestSet(env));
+        case "/api/scrape-log":
+          return this.corsResponse(await this.handleScrapeLog(env));
         case "/api/products":
           return this.corsResponse(await this.handleProducts(env));
         default:
@@ -83,6 +85,42 @@ export default {
     return normalized.replace(/\/+$/g, "");
   },
 
+  decodeSqlCell(cell) {
+    if (cell == null) return null;
+    if (typeof cell === "object" && "type" in cell) {
+      if (cell.type === "null") return null;
+      if (cell.type === "integer" || cell.type === "real") {
+        return cell.value == null ? null : Number(cell.value);
+      }
+      return cell.value;
+    }
+    return cell;
+  },
+
+  normalizeQueryResult(result) {
+    if (!result || !Array.isArray(result.rows)) {
+      return { cols: result?.cols || [], rows: [] };
+    }
+    return {
+      cols: result.cols || [],
+      rows: result.rows.map(row => Array.isArray(row)
+        ? row.map(cell => this.decodeSqlCell(cell))
+        : row
+      )
+    };
+  },
+
+  async handleScrapeLog(env) {
+    const result = await this.executeSQL(env, `
+      SELECT asin, amazon_price, stock_status, last_checked, priority
+      FROM products
+      WHERE last_checked IS NOT NULL
+      ORDER BY last_checked DESC
+      LIMIT 20
+    `);
+    return { rows: result.rows || [] };
+  },
+
   async executeSQL(env, sql, args = []) {
     const rawUrl = this.getTursoUrl(env);
     const url = this.normalizeTursoUrl(rawUrl);
@@ -122,7 +160,7 @@ export default {
       throw new Error(err);
     }
 
-    return data.results?.[0]?.response?.result || { cols: [], rows: [] };
+    return this.normalizeQueryResult(data.results?.[0]?.response?.result || { cols: [], rows: [] });
   },
 
   async handleStats(env, body) {

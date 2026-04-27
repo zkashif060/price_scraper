@@ -380,6 +380,20 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
     </div>
   </div>
 
+  <!-- Amazon scrape log -->
+  <div class="card" id="scrape-log">
+    <div class="ch">
+      <h2>Amazon scrape log</h2>
+      <span class="badge bm">recent</span>
+    </div>
+    <div class="prod-grid" id="scrapeLogList">
+      <div class="prod-row header">
+        <div>ASIN</div><div>Price</div><div>Status</div><div>Priority</div><div>Checked</div>
+      </div>
+      <div class="empty">Loading scrape results...</div>
+    </div>
+  </div>
+
   <!-- Test ASINs -->
   <div class="card" id="test-asins">
     <div class="ch">
@@ -863,12 +877,48 @@ async function loadProducts() {
   }
 }
 
+async function loadScrapeLog() {
+  try {
+    const r = await apiFetch("/api/scrape-log");
+    const el = document.getElementById("scrapeLogList");
+    const header = el.querySelector(".prod-row.header");
+    el.innerHTML = "";
+    if (header) el.appendChild(header);
+
+    if (!r.rows.length) {
+      el.innerHTML = `<div class="empty">No recent scrape entries available.</div>`;
+      return;
+    }
+
+    for (const item of r.rows) {
+      const [asin, price, status, lastChecked, priority] = Array.isArray(item)
+        ? item
+        : [item.asin, item.amazon_price, item.stock_status, item.last_checked ?? item.lastChecked, item.priority];
+      const d = document.createElement("div");
+      d.className = "prod-row";
+      const priceValue = price != null && !Number.isNaN(Number(price)) ? Number(price) : null;
+      const statusLabel = priceValue != null ? `✓ ${status || 'in_stock'}` : `✗ ${status || 'pending'}`;
+      d.innerHTML = `
+        <div class="prod-asin">${asin || '—'}</div>
+        <div class="prod-price">${priceValue != null ? `£${priceValue.toFixed(2)}` : '—'}</div>
+        <div class="prod-stock">${statusLabel}</div>
+        <div class="prod-priority ${priority || 'cold'}">${priority || 'cold'}</div>
+        <div class="prod-time">${ago(lastChecked)}</div>
+      `;
+      el.appendChild(d);
+    }
+  } catch (err) {
+    document.getElementById("scrapeLogList").innerHTML = `<div class="empty">Error loading scrape log: ${err.message}</div>`;
+  }
+}
+
 async function seedTestAsins() {
   try {
     await apiFetch("/api/add-test-set");
     log("✓ Seeded 3 test ASINs", "ok");
     await loadTestAsins();
     await loadProducts();
+    await loadScrapeLog();
     await loadStats();
   } catch (err) {
     log(`✗ Failed to seed test ASINs: ${err.message}`, "err");
@@ -891,7 +941,7 @@ async function loadAll() {
   document.getElementById("refIc").textContent = "⏳";
 
   try {
-    await Promise.all([loadStats(), loadAccounts(), loadChanges(), loadTestAsins(), loadProducts()]);
+    await Promise.all([loadStats(), loadAccounts(), loadChanges(), loadTestAsins(), loadProducts(), loadScrapeLog()]);
     document.getElementById("tsEl").textContent = `updated ${new Date().toLocaleTimeString()}`;
     document.getElementById("dotEl").className = "dot-live";
     document.getElementById("sbStatus").textContent = "live";
