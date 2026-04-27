@@ -29,16 +29,17 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,99,255,.18), transparent 35%), radial-gradient(circle at bottom right, rgba(61,168,255,.12), transparent 30%), var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;overflow-x:hidden}
 
 /* ── Shell layout ── */
 .shell{display:flex;min-height:100vh}
 
 /* ── Sidebar ── */
 .sidebar{
-  width:200px;flex-shrink:0;
-  background:var(--surface);
-  border-right:1px solid var(--border);
+  width:220px;flex-shrink:0;
+  background:rgba(15,15,28,.96);
+  border-right:1px solid rgba(255,255,255,.05);
+  box-shadow:2px 0 20px rgba(0,0,0,.16);
   display:flex;flex-direction:column;
   position:sticky;top:0;height:100vh;
 }
@@ -80,17 +81,18 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .alert code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px}
 
 /* ── Page header ── */
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap}
-.ph h1{font-size:21px;font-weight:700;letter-spacing:-.4px}
-.ph p{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:14px;flex-wrap:wrap}
+.ph h1{font-size:24px;font-weight:800;letter-spacing:-.6px}
+.ph p{font-size:11px;color:var(--muted);margin-top:5px;font-family:var(--mono)}
 .btn-ref{
-  display:flex;align-items:center;gap:5px;
-  padding:7px 13px;
-  background:var(--card);border:1px solid var(--border2);border-radius:7px;
-  color:var(--muted);font-size:11.5px;font-family:var(--sans);
-  cursor:pointer;transition:all .12s;
+  display:flex;align-items:center;gap:7px;
+  padding:10px 16px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:999px;
+  color:var(--text);font-size:12px;font-family:var(--sans);
+  cursor:pointer;transition:all .14s;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
 }
-.btn-ref:hover{color:var(--text);border-color:var(--accent)}
+.btn-ref:hover{color:#fff;border-color:rgba(108,99,255,.35);background:rgba(108,99,255,.12)}
 
 /* ── Stats grid ── */
 .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px;margin-bottom:18px}
@@ -113,10 +115,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .sc-sub{font-size:10px;color:var(--muted)}
 
 /* ── Card ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
-.ch{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
-.ch h2{font-size:12.5px;font-weight:600}
-.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;font-family:var(--mono)}
+.card{background:rgba(17,17,34,.88);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);margin-bottom:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.18);backdrop-filter:blur(14px)}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
+.ch h2{font-size:13px;font-weight:700;letter-spacing:-.02em}
+.badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;font-family:var(--mono)}
 .bg  {background:rgba(35,209,139,.1);color:var(--green);border:1px solid rgba(35,209,139,.2)}
 .br  {background:rgba(255,79,79,.1); color:var(--red);  border:1px solid rgba(255,79,79,.2)}
 .ba  {background:rgba(255,170,51,.1);color:var(--amber);border:1px solid rgba(255,170,51,.2)}
@@ -140,13 +142,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .cform input:focus{border-color:var(--accent)}
 .cform input::placeholder{color:var(--dim)}
 .btn-ebay{
-  padding:8px 16px;
-  background:var(--accent);border:none;border-radius:7px;
-  color:#fff;font-size:12.5px;font-weight:600;font-family:var(--sans);
-  cursor:pointer;white-space:nowrap;transition:opacity .12s,transform .1s;
+  padding:10px 18px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:999px;
+  color:#fff;font-size:12.5px;font-weight:700;font-family:var(--sans);
+  cursor:pointer;white-space:nowrap;transition:transform .15s,box-shadow .15s;
+  box-shadow:0 14px 26px rgba(108,99,255,.18);
 }
-.btn-ebay:hover{opacity:.85}
-.btn-ebay:active{transform:scale(.97)}
+.btn-ebay:hover{transform:translateY(-1px);box-shadow:0 18px 34px rgba(108,99,255,.24)}
+.btn-ebay:active{transform:scale(.98)}
 .cform-hint{width:100%;font-size:10px;color:var(--muted);font-family:var(--mono)}
 
 /* ── Accounts ── */
@@ -228,11 +231,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 }
 .modal-bg.show{display:flex}
 .modal{
-  background:var(--card);border:1px solid var(--border2);border-radius:14px;
-  padding:28px;width:100%;max-width:440px;margin:16px;
+  background:rgba(15,15,28,.98);border:1px solid rgba(255,255,255,.08);border-radius:18px;
+  padding:30px;width:100%;max-width:500px;margin:16px;box-shadow:0 40px 120px rgba(0,0,0,.32);
 }
-.modal h3{font-size:16px;font-weight:700;margin-bottom:6px}
-.modal p{font-size:12px;color:var(--muted);margin-bottom:18px;font-family:var(--mono);line-height:1.7}
+.modal h3{font-size:18px;font-weight:800;margin-bottom:8px;letter-spacing:-.02em}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:20px;font-family:var(--mono);line-height:1.8}
 .modal input{
   width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;
   padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--sans);
@@ -352,8 +355,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   <div class="modal">
     <h3>Connect eBay account</h3>
     <p>
-      Because this dashboard runs as a static page, the token exchange
-      happens via a GitHub Actions workflow. Follow the steps below.
+      This dashboard uses your Cloudflare Worker to exchange the eBay auth code
+      safely and store the refresh token in your Turso database.
     </p>
 
     <div class="modal-steps">
@@ -367,7 +370,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       </div>
       <div class="step" id="step3">
         <div class="step-num">3</div>
-        <span>Token saved to database via GitHub Actions</span>
+        <span>Refresh token stored securely in the database</span>
       </div>
     </div>
 
@@ -413,14 +416,27 @@ function isConfigured() {
   ].some(v => !v || v.startsWith("YOUR_"));
 }
 
+function buildWorkerUrl(path) {
+  const base = CONFIG.WORKER_URL.trim();
+  if (!base) return path;
+  return new URL(path, base.endsWith("/") ? base : `${base}/`).toString();
+}
+
 async function apiFetch(path, payload = {}) {
-  const res = await fetch(`${CONFIG.WORKER_URL}${path}`, {
+  const url = buildWorkerUrl(path);
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
 
-  const data = await res.json();
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Worker ${res.status}: invalid JSON response`);
+  }
+
   if (!res.ok) {
     throw new Error(data.error || `Worker ${res.status}`);
   }
@@ -658,7 +674,7 @@ async function modalAction() {
       document.getElementById("step3").className = "step active";
       document.getElementById("modalBtn").textContent = "Done ✓";
 
-      log(`✓ Connected ${data.ebay_username || label} — token saved securely`, "ok");
+      log(`✓ Connected ${data.ebay_username || label} — refresh token stored securely`, "ok");
 
       // Wait 30s then reload accounts
       setTimeout(async () => {

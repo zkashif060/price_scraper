@@ -5,7 +5,7 @@ export default {
     }
 
     const url = new URL(request.url);
-    const path = url.pathname.replace(/\/+$/g, "");
+    const path = url.pathname.replace(/\/+/g, "/").replace(/\/+$/g, "");
 
     if (request.method !== "POST") {
       return this.corsResponse({ error: "Only POST requests are allowed." }, 405);
