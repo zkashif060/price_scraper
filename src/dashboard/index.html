@@ -198,18 +198,42 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
 .pc-price.oo{color:var(--amber)}
 .pc-time{font-size:9.5px;color:var(--dim);flex-shrink:0;width:55px;text-align:right;font-family:var(--mono)}
 
-/* ── Priority bars ── */
-.pb-wrap{padding:15px 16px}
-.pb{margin-bottom:13px}
-.pb:last-child{margin-bottom:0}
-.pb-lbl{display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:4px;font-family:var(--mono)}
-.pb-lbl span:last-child{color:var(--muted)}
-.pb-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
-.pb-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
-.pb-fill.hot {background:linear-gradient(90deg,var(--red),#ff9090)}
-.pb-fill.warm{background:linear-gradient(90deg,var(--amber),#ffd580)}
-.pb-fill.cold{background:var(--dim)}
-.pb-est{font-size:9.5px;color:var(--muted);margin-top:11px;font-family:var(--mono);border-top:1px solid var(--border);padding-top:9px}
+/* ── Test ASINs ── */
+.test-row{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 16px;border-bottom:1px solid var(--border);font-size:11px;
+}
+.test-row:last-child{border-bottom:none}
+.test-asin{font-family:var(--mono);font-size:10px;color:var(--muted);width:100px;flex-shrink:0}
+.test-price{font-family:var(--mono);font-size:11px;flex-shrink:0;width:80px}
+.test-status{font-size:10px;flex-shrink:0;width:70px;text-align:center}
+.test-status.success{color:var(--green)}
+.test-status.error{color:var(--red)}
+.test-status.pending{color:var(--amber)}
+.test-time{font-size:9.5px;color:var(--dim);flex-shrink:0;width:55px;text-align:right;font-family:var(--mono)}
+.btn-remove{
+  padding:2px 6px;background:transparent;
+  border:1px solid var(--border2);border-radius:4px;
+  color:var(--muted);font-size:9px;cursor:pointer;
+  font-family:var(--mono);transition:all .12s;flex-shrink:0;
+}
+.btn-remove:hover{border-color:var(--red);color:var(--red)}
+
+/* ── Product analytics list ── */
+.prod-grid{display:flex;flex-direction:column;margin:0}
+.prod-row{display:grid;grid-template-columns:100px 90px 90px 70px 70px 90px 95px;gap:10px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);font-size:11px}
+.prod-row.header{font-weight:700;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.03)}
+.prod-row:last-child{border-bottom:none}
+.prod-asin{font-family:var(--mono);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prod-price{font-family:var(--mono);color:var(--text)}
+.prod-stock{font-family:var(--mono);color:var(--muted)}
+.prod-metric{font-family:var(--mono);color:var(--muted);text-align:right}
+.prod-priority{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text)}
+.prod-priority.hot{color:var(--red)}
+.prod-priority.warm{color:var(--amber)}
+.prod-priority.test{color:var(--blue)}
+.prod-priority.cold{color:var(--dim)}
+.prod-time{font-family:var(--mono);color:var(--muted);text-align:right}
 
 /* ── Log ── */
 .log{padding:10px 16px;font-family:var(--mono);font-size:10.5px;color:var(--muted);max-height:150px;overflow-y:auto;line-height:1.9}
@@ -340,6 +364,34 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
       <span class="badge bp">€49 plan</span>
     </div>
     <div class="pb-wrap" id="pbWrap"><div class="empty">Loading...</div></div>
+  </div>
+
+  <!-- ASIN analytics -->
+  <div class="card" id="products">
+    <div class="ch">
+      <h2>ASIN analytics</h2>
+      <span class="badge bb">top 50</span>
+    </div>
+    <div class="prod-grid" id="prodList">
+      <div class="prod-row header">
+        <div>ASIN</div><div>Price</div><div>Stock</div><div>Views</div><div>Sales</div><div>Priority</div><div>Checked</div>
+      </div>
+      <div class="empty">Loading ASIN analytics...</div>
+    </div>
+  </div>
+
+  <!-- Test ASINs -->
+  <div class="card" id="test-asins">
+    <div class="ch">
+      <h2>Test ASINs</h2>
+      <span class="badge bm" id="testBadge">manual test</span>
+    </div>
+    <div class="cform">
+      <input type="text" id="asinIn" placeholder="Enter ASIN — e.g. B08N5WRWNW" maxlength="10">
+      <button class="btn-ebay" onclick="addTestAsin()">+ Add Test ASIN</button>
+      <div class="cform-hint">Add ASINs manually to test the Amazon scraper. They'll be marked as 'test' priority.</div>
+    </div>
+    <div id="testList"><div class="empty">No test ASINs added yet.</div></div>
   </div>
 
   <!-- Log -->
@@ -475,9 +527,11 @@ async function loadStats() {
 
   const totalAcc  = Number(stats.totalAccounts || 0);
   const totalList = Number(stats.totalListings || 0);
+  const totalAsins = Number(stats.totalAsins || 0);
   const hot = Number(stats.hotAsins || 0);
   const warm = Number(stats.warmAsins || 0);
   const cold = Number(stats.coldAsins || 0);
+  const test = Number(stats.testAsins || 0);
   const upd = Number(stats.priceUpdates || 0);
   const oos = Number(stats.oosCount || 0);
   const rst = Number(stats.restoredCount || 0);
@@ -486,7 +540,7 @@ async function loadStats() {
   document.getElementById("sg").innerHTML = `
     <div class="sc p"><div class="sc-lbl">Accounts</div><div class="sc-val">${totalAcc}</div><div class="sc-sub">connected</div></div>
     <div class="sc"> <div class="sc-lbl">Listings</div><div class="sc-val">${totalList.toLocaleString()}</div><div class="sc-sub">all accounts</div></div>
-    <div class="sc"> <div class="sc-lbl">ASINs</div><div class="sc-val">${(hot+warm+cold).toLocaleString()}</div><div class="sc-sub">${hot} hot · ${warm} warm · ${cold} cold</div></div>
+    <div class="sc"> <div class="sc-lbl">ASINs</div><div class="sc-val">${totalAsins.toLocaleString()}</div><div class="sc-sub">${hot} hot · ${warm} warm · ${cold} cold${test ? ` · ${test} test` : ''}</div></div>
     <div class="sc g"><div class="sc-lbl">Updated today</div><div class="sc-val">${upd}</div><div class="sc-sub">price changes</div></div>
     <div class="sc a"><div class="sc-lbl">OOS paused</div><div class="sc-val">${oos}</div><div class="sc-sub">out of stock</div></div>
     <div class="sc b"><div class="sc-lbl">Restored</div><div class="sc-val">${rst}</div><div class="sc-sub">back in stock</div></div>
@@ -697,6 +751,109 @@ async function disconnect(accountId) {
   }
 }
 
+// ── Load test ASINs ──────────────────────────────────────────────────────────
+async function loadTestAsins() {
+  try {
+    const r = await apiFetch("/api/test-asins");
+    document.getElementById("testBadge").textContent = `${r.rows.length} test ASINs`;
+    const el = document.getElementById("testList");
+
+    if (!r.rows.length) {
+      el.innerHTML = `<div class="empty">No test ASINs added yet.</div>`;
+      return;
+    }
+
+    el.innerHTML = "";
+    for (const [asin, price, in_stock, last_scraped, priority, status] of r.rows) {
+      const d = document.createElement("div");
+      d.className = "test-row";
+      const priceStr = price ? `£${Number(price).toFixed(2)}` : "—";
+      const statusClass = status === 'success' ? 'success' : status === 'error' ? 'error' : 'pending';
+      const statusText = status === 'success' ? '✓' : status === 'error' ? '✗' : '⏳';
+      d.innerHTML = `
+        <div class="test-asin">${asin}</div>
+        <div class="test-price">${priceStr}</div>
+        <div class="test-status ${statusClass}">${statusText} ${status}</div>
+        <div class="test-time">${ago(last_scraped)}</div>
+        <button class="btn-remove" onclick="removeTestAsin('${asin}')">×</button>
+      `;
+      el.appendChild(d);
+    }
+  } catch (err) {
+    document.getElementById("testList").innerHTML = `<div class="empty">Error loading test ASINs: ${err.message}</div>`;
+  }
+}
+
+// ── Add test ASIN ─────────────────────────────────────────────────────────────
+async function addTestAsin() {
+  const asin = document.getElementById("asinIn").value.trim().toUpperCase();
+  if (!asin) {
+    alert("Enter an ASIN first.");
+    return;
+  }
+
+  // Basic ASIN validation (should start with B and be 10 characters)
+  if (!/^B[A-Z0-9]{9}$/.test(asin)) {
+    alert("Invalid ASIN format. Should be like B08N5WRWNW");
+    return;
+  }
+
+  try {
+    await apiFetch("/api/add-test-asin", { asin });
+    document.getElementById("asinIn").value = "";
+    log(`✓ Added test ASIN: ${asin}`, "ok");
+    await loadTestAsins();
+  } catch (err) {
+    log(`✗ Failed to add ASIN: ${err.message}`, "err");
+    alert(`Failed to add ASIN: ${err.message}`);
+  }
+}
+
+// ── Remove test ASIN ──────────────────────────────────────────────────────────
+async function removeTestAsin(asin) {
+  if (!confirm(`Remove test ASIN "${asin}"?`)) return;
+  try {
+    await apiFetch("/api/remove-test-asin", { asin });
+    log(`✓ Removed test ASIN: ${asin}`, "ok");
+    await loadTestAsins();
+  } catch (err) {
+    log(`✗ Failed to remove ASIN: ${err.message}`, "err");
+  }
+}
+
+// ── Load product analytics ─────────────────────────────────────────────────────
+async function loadProducts() {
+  try {
+    const r = await apiFetch("/api/products");
+    const el = document.getElementById("prodList");
+    const header = el.querySelector(".prod-row.header");
+    el.innerHTML = "";
+    if (header) el.appendChild(header);
+
+    if (!r.rows.length) {
+      el.innerHTML = `<div class="empty">No ASINs available in products yet.</div>`;
+      return;
+    }
+
+    for (const [asin, price, stock, views, sales, priority, lastChecked] of r.rows) {
+      const d = document.createElement("div");
+      d.className = "prod-row";
+      d.innerHTML = `
+        <div class="prod-asin">${asin}</div>
+        <div class="prod-price">${price != null ? `£${Number(price).toFixed(2)}` : '—'}</div>
+        <div class="prod-stock">${stock || 'unknown'}</div>
+        <div class="prod-metric">${views != null ? views : '—'}</div>
+        <div class="prod-metric">${sales != null ? sales : '—'}</div>
+        <div class="prod-priority ${priority || 'cold'}">${priority || 'cold'}</div>
+        <div class="prod-time">${ago(lastChecked)}</div>
+      `;
+      el.appendChild(d);
+    }
+  } catch (err) {
+    document.getElementById("prodList").innerHTML = `<div class="empty">Error loading ASIN analytics: ${err.message}</div>`;
+  }
+}
+
 // ── Load all ──────────────────────────────────────────────────────────────────
 async function loadAll() {
   // Show config warning if not set up
@@ -712,7 +869,7 @@ async function loadAll() {
   document.getElementById("refIc").textContent = "⏳";
 
   try {
-    await Promise.all([loadStats(), loadAccounts(), loadChanges()]);
+    await Promise.all([loadStats(), loadAccounts(), loadChanges(), loadTestAsins(), loadProducts()]);
     document.getElementById("tsEl").textContent = `updated ${new Date().toLocaleTimeString()}`;
     document.getElementById("dotEl").className = "dot-live";
     document.getElementById("sbStatus").textContent = "live";

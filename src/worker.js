@@ -30,6 +30,14 @@ export default {
           return this.corsResponse(await this.handleDisconnect(env, body));
         case "/api/exchange-token":
           return this.corsResponse(await this.handleExchangeToken(env, body));
+        case "/api/test-asins":
+          return this.corsResponse(await this.handleTestAsins(env));
+        case "/api/add-test-asin":
+          return this.corsResponse(await this.handleAddTestAsin(env, body));
+        case "/api/remove-test-asin":
+          return this.corsResponse(await this.handleRemoveTestAsin(env, body));
+        case "/api/products":
+          return this.corsResponse(await this.handleProducts(env));
         default:
           return this.corsResponse({ error: "Unknown API endpoint." }, 404);
       }
@@ -70,7 +78,7 @@ export default {
     }
     // Remove any already-present pipeline path to avoid duplication.
     normalized = normalized.replace(/\/v2\/pipeline\/?$/i, "");
-    return normalized.replace(/\/+$/g, "");
+    return normalized.replace(/\/+$/g, " ");
   },
 
   async executeSQL(env, sql, args = []) {
@@ -120,18 +128,22 @@ export default {
 
     const accounts = await this.executeSQL(env, "SELECT COUNT(*) FROM ebay_accounts WHERE status='active'");
     const listings = await this.executeSQL(env, "SELECT COUNT(*) FROM listings WHERE status='active'");
+    const totalAsinsRes = await this.executeSQL(env, "SELECT COUNT(*) FROM products");
     const priorities = await this.executeSQL(env, "SELECT priority, COUNT(*) FROM products GROUP BY priority");
     const changes = await this.executeSQL(env, "SELECT change_type, COUNT(*) FROM price_changes WHERE changed_at >= ? GROUP BY change_type", [today]);
 
     const totalAccounts = Number(accounts.rows?.[0]?.[0] || 0);
     const totalListings = Number(listings.rows?.[0]?.[0] || 0);
+    const totalAsins = Number(totalAsinsRes.rows?.[0]?.[0] || 0);
 
-    let hotAsins = 0, warmAsins = 0, coldAsins = 0;
+    let hotAsins = 0, warmAsins = 0, coldAsins = 0, testAsins = 0, otherAsins = 0;
     for (const [priority, count] of priorities.rows || []) {
       const n = Number(count);
       if (priority === "hot") hotAsins = n;
-      if (priority === "warm") warmAsins = n;
-      if (priority === "cold") coldAsins = n;
+      else if (priority === "warm") warmAsins = n;
+      else if (priority === "cold") coldAsins = n;
+      else if (priority === "test") testAsins = n;
+      else otherAsins += n;
     }
 
     let priceUpdates = 0, oosCount = 0, restoredCount = 0;
@@ -142,7 +154,20 @@ export default {
       if (changeType === "restored") restoredCount = n;
     }
 
-    return { totalAccounts, totalListings, hotAsins, warmAsins, coldAsins, priceUpdates, oosCount, restoredCount, backendStatus: "Online" };
+    return {
+      totalAccounts,
+      totalListings,
+      totalAsins,
+      hotAsins,
+      warmAsins,
+      coldAsins,
+      testAsins,
+      otherAsins,
+      priceUpdates,
+      oosCount,
+      restoredCount,
+      backendStatus: "Online"
+    };
   },
 
   async handleAccounts(env) {
@@ -233,5 +258,67 @@ export default {
     `, [label, ebayUsername, tokenData.refresh_token]);
 
     return { ebay_username: ebayUsername };
+  },
+
+  async handleTestAsins(env) {
+    const result = await this.executeSQL(env, `
+      SELECT asin, amazon_price, stock_status, last_scraped, priority,
+             CASE
+               WHEN last_scraped IS NULL THEN 'pending'
+               WHEN amazon_price IS NOT NULL THEN 'success'
+               ELSE 'error'
+             END as status
+      FROM products
+      WHERE priority = 'test'
+      ORDER BY last_scraped DESC, asin ASC
+      LIMIT 50
+    `);
+    return { rows: result.rows || [] };
+  },
+
+  async handleProducts(env) {
+    const result = await this.executeSQL(env, `
+      SELECT asin, amazon_price, stock_status, views_24h, sales_7d, priority, last_checked
+      FROM products
+      ORDER BY
+        CASE priority
+          WHEN 'hot' THEN 1
+          WHEN 'warm' THEN 2
+          WHEN 'test' THEN 3
+          ELSE 4
+        END,
+        sales_7d DESC,
+        views_24h DESC,
+        last_checked DESC
+      LIMIT 50
+    `);
+    return { rows: result.rows || [] };
+  },
+
+  async handleAddTestAsin(env, body) {
+    const asin = body?.asin?.trim()?.toUpperCase();
+    if (!asin) {
+      throw new Error("Missing ASIN.");
+    }
+    if (!/^B[A-Z0-9]{9}$/.test(asin)) {
+      throw new Error("Invalid ASIN format.");
+    }
+
+    await this.executeSQL(env, `
+      INSERT OR REPLACE INTO products (asin, priority, created_at, updated_at)
+      VALUES (?, 'test', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `, [asin]);
+
+    return { ok: true };
+  },
+
+  async handleRemoveTestAsin(env, body) {
+    const asin = body?.asin?.trim()?.toUpperCase();
+    if (!asin) {
+      throw new Error("Missing ASIN.");
+    }
+
+    await this.executeSQL(env, "DELETE FROM products WHERE asin = ? AND priority = 'test'", [asin]);
+    return { ok: true };
   }
 };
