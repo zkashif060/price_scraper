@@ -474,34 +474,24 @@ async function loadStats() {
 
   const totalAcc  = Number(stats.totalAccounts || 0);
   const totalList = Number(stats.totalListings || 0);
-
-  let tot = 0, hot = 0, warm = 0, cold = 0;
-  for (const [pr, cnt] of p.rows) {
-    const n = Number(cnt);
-    tot += n;
-    if (pr === "hot")  hot  = n;
-    if (pr === "warm") warm = n;
-    if (pr === "cold") cold = n;
-  }
-
-  let upd = 0, oos = 0, rst = 0;
-  for (const [tp, cnt] of c.rows) {
-    const n = Number(cnt);
-    if (tp === "up" || tp === "down") upd += n;
-    if (tp === "out_of_stock")        oos  = n;
-    if (tp === "restored")            rst  = n;
-  }
+  const totalAsins = Number(stats.totalAsins || 0);
+  const hot = Number(stats.hotAsins || 0);
+  const warm = Number(stats.warmAsins || 0);
+  const cold = Number(stats.coldAsins || 0);
+  const upd = Number(stats.priceUpdates || 0);
+  const oos = Number(stats.oosCount || 0);
+  const rst = Number(stats.restoredCount || 0);
 
   document.getElementById("sg").innerHTML = `
     <div class="sc p"><div class="sc-lbl">Accounts</div><div class="sc-val">${totalAcc}</div><div class="sc-sub">connected</div></div>
     <div class="sc"> <div class="sc-lbl">Listings</div><div class="sc-val">${totalList.toLocaleString()}</div><div class="sc-sub">all accounts</div></div>
-    <div class="sc"> <div class="sc-lbl">ASINs</div><div class="sc-val">${tot.toLocaleString()}</div><div class="sc-sub">${hot} hot · ${warm} warm · ${cold} cold</div></div>
+    <div class="sc"> <div class="sc-lbl">ASINs</div><div class="sc-val">${totalAsins.toLocaleString()}</div><div class="sc-sub">${hot} hot · ${warm} warm · ${cold} cold</div></div>
     <div class="sc g"><div class="sc-lbl">Updated today</div><div class="sc-val">${upd}</div><div class="sc-sub">price changes</div></div>
     <div class="sc a"><div class="sc-lbl">OOS paused</div><div class="sc-val">${oos}</div><div class="sc-sub">out of stock</div></div>
     <div class="sc b"><div class="sc-lbl">Restored</div><div class="sc-val">${rst}</div><div class="sc-sub">back in stock</div></div>
   `;
 
-  const T = Math.max(tot, 1);
+  const T = Math.max(totalAsins, 1);
   document.getElementById("pbWrap").innerHTML = `
     <div class="pb">
       <div class="pb-lbl"><span>🔴 Hot — every 2 hrs</span><span>${hot}</span></div>
