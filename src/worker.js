@@ -54,15 +54,28 @@ export default {
     });
   },
 
+  getTursoUrl(env) {
+    return env.TURSO_URL || env.LIBSQL_URL;
+  },
+
+  getTursoToken(env) {
+    return env.TURSO_TOKEN || env.LIBSQL_AUTH_TOKEN;
+  },
+
   async executeSQL(env, sql, args = []) {
-    if (!env.TURSO_URL || !env.TURSO_TOKEN) {
-      throw new Error("Server is missing Turso credentials.");
+    const url = this.getTursoUrl(env);
+    const token = this.getTursoToken(env);
+    if (!url || !token) {
+      const missing = [];
+      if (!url) missing.push("TURSO_URL or LIBSQL_URL");
+      if (!token) missing.push("TURSO_TOKEN or LIBSQL_AUTH_TOKEN");
+      throw new Error(`Server is missing Turso credentials: ${missing.join(", ")}`);
     }
 
-    const res = await fetch(`${env.TURSO_URL}/v2/pipeline`, {
+    const res = await fetch(`${url}/v2/pipeline`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${env.TURSO_TOKEN}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({

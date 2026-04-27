@@ -13,7 +13,7 @@ This repository hosts a static GitHub Pages dashboard and a Cloudflare Worker ba
 - `.github/workflows/deploy.yml` no longer injects secrets into the published page.
 
 ## Deployment notes
-1. Deploy the worker with `TURSO_URL`, `TURSO_TOKEN`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, and `EBAY_RUNAME` set as worker environment variables.
+1. Deploy the worker with `TURSO_URL`/`LIBSQL_URL`, `TURSO_TOKEN`/`LIBSQL_AUTH_TOKEN`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, and `EBAY_RUNAME` set as worker environment variables.
 2. Set `WORKER_URL`, `EBAY_CLIENT_ID`, and `EBAY_RUNAME` in `src/dashboard/index.html` before publishing.
 3. Deploy the dashboard folder with GitHub Pages.
 
