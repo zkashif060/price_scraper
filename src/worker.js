@@ -213,8 +213,13 @@ export default {
     if (!code || !label) {
       throw new Error("Missing label or code.");
     }
-    if (!env.EBAY_CLIENT_ID || !env.EBAY_CLIENT_SECRET || !env.EBAY_RUNAME) {
-      throw new Error("Server is missing eBay OAuth settings.");
+
+    const missing = [];
+    if (!env.EBAY_CLIENT_ID) missing.push("EBAY_CLIENT_ID");
+    if (!env.EBAY_CLIENT_SECRET) missing.push("EBAY_CLIENT_SECRET");
+    if (!env.EBAY_RUNAME) missing.push("EBAY_RUNAME");
+    if (missing.length) {
+      throw new Error(`Server is missing eBay OAuth settings: ${missing.join(", ")}`);
     }
 
     const credentials = btoa(`${env.EBAY_CLIENT_ID}:${env.EBAY_CLIENT_SECRET}`);
