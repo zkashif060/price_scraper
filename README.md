@@ -98,14 +98,17 @@ Run these SQL queries in your Turso database to add test ASINs:
 
 ```sql
 -- Replace with real ASINs you want to test
-INSERT OR REPLACE INTO products (asin, priority, created_at, updated_at) 
-VALUES ("B08N5WRWNW", "test", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO products (asin, priority)
+VALUES ("B08N5WRWNW", "test")
+ON CONFLICT(asin) DO UPDATE SET priority='test';
 
-INSERT OR REPLACE INTO products (asin, priority, created_at, updated_at) 
-VALUES ("B07ZPKN6YR", "test", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO products (asin, priority)
+VALUES ("B07ZPKN6YR", "test")
+ON CONFLICT(asin) DO UPDATE SET priority='test';
 
-INSERT OR REPLACE INTO products (asin, priority, created_at, updated_at) 
-VALUES ("B08FC6MR62", "test", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO products (asin, priority)
+VALUES ("B08FC6MR62", "test")
+ON CONFLICT(asin) DO UPDATE SET priority='test';
 ```
 
 ### Monitoring

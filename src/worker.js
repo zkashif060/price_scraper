@@ -264,15 +264,15 @@ export default {
 
   async handleTestAsins(env) {
     const result = await this.executeSQL(env, `
-      SELECT asin, amazon_price, stock_status, last_scraped, priority,
+      SELECT asin, amazon_price, stock_status, last_checked, priority,
              CASE
-               WHEN last_scraped IS NULL THEN 'pending'
+               WHEN last_checked IS NULL THEN 'pending'
                WHEN amazon_price IS NOT NULL THEN 'success'
                ELSE 'error'
              END as status
       FROM products
       WHERE priority = 'test'
-      ORDER BY last_scraped DESC, asin ASC
+      ORDER BY last_checked DESC, asin ASC
       LIMIT 50
     `);
     return { rows: result.rows || [] };
@@ -307,8 +307,9 @@ export default {
     }
 
     await this.executeSQL(env, `
-      INSERT OR REPLACE INTO products (asin, priority, created_at, updated_at)
-      VALUES (?, 'test', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO products (asin, priority)
+      VALUES (?, 'test')
+      ON CONFLICT(asin) DO UPDATE SET priority='test'
     `, [asin]);
 
     return { ok: true };
@@ -323,8 +324,9 @@ export default {
 
     for (const asin of asins) {
       await this.executeSQL(env, `
-        INSERT OR REPLACE INTO products (asin, priority, created_at, updated_at)
-        VALUES (?, 'test', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        INSERT INTO products (asin, priority)
+        VALUES (?, 'test')
+        ON CONFLICT(asin) DO UPDATE SET priority='test'
       `, [asin]);
     }
 

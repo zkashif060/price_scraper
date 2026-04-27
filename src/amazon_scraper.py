@@ -297,31 +297,33 @@ async def update_database(db, scrape_results):
             in_stock = result['in_stock']
             scraped_at = result['scraped_at']
 
-            # Get current price from database
+            # Get current product state from database
             current = await db.execute(
-                "SELECT price, in_stock FROM products WHERE asin = ?",
+                "SELECT amazon_price, stock_status FROM products WHERE asin = ?",
                 [asin]
             )
 
-            old_price = old_in_stock = None
+            old_price = old_stock = None
             if current.rows:
                 old_price = current.rows[0][0]
-                old_in_stock = current.rows[0][1]
+                old_stock = current.rows[0][1]
+
+            stock_status = "in_stock" if in_stock else "out_of_stock"
 
             # Determine change type
             change_type = None
             if old_price is not None and price is not None:
                 if abs(price - old_price) > 0.01:  # Significant price change
                     change_type = "up" if price > old_price else "down"
-            elif old_in_stock != in_stock:
-                change_type = "out_of_stock" if not in_stock else "restored"
+            elif old_stock != stock_status:
+                change_type = "out_of_stock" if stock_status == "out_of_stock" else "restored"
 
             # Update product
             await db.execute("""
                 UPDATE products
-                SET price = ?, in_stock = ?, last_scraped = ?, updated_at = CURRENT_TIMESTAMP
+                SET amazon_price = ?, stock_status = ?, last_checked = CURRENT_TIMESTAMP
                 WHERE asin = ?
-            """, [price, in_stock, scraped_at, asin])
+            """, [price, stock_status, asin])
 
             # Record price change if significant
             if change_type:
@@ -372,8 +374,8 @@ async def main():
                 p.priority IN ('hot', 'warm', 'test')
                 AND (
                     p.priority = 'test'  -- Always check test ASINs
-                    OR p.last_scraped IS NULL
-                    OR p.last_scraped <= datetime(CURRENT_TIMESTAMP, '-' ||
+                    OR p.last_checked IS NULL
+                    OR p.last_checked <= datetime(CURRENT_TIMESTAMP, '-' ||
                         (CASE
                             WHEN p.priority = 'hot' THEN '2'
                             WHEN p.priority = 'warm' THEN '6'

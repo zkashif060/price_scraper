@@ -768,7 +768,7 @@ async function loadTestAsins() {
     for (const item of r.rows) {
       const [asin, price, in_stock, last_scraped, priority, status] = Array.isArray(item)
         ? item
-        : [item.asin, item.amazon_price ?? item.price, item.stock_status ?? item.in_stock, item.last_scraped ?? item.lastScraped, item.priority, item.status];
+        : [item.asin, item.amazon_price ?? item.price, item.stock_status ?? item.in_stock, item.last_checked ?? item.lastChecked ?? item.lastScraped, item.priority, item.status];
       const d = document.createElement("div");
       d.className = "test-row";
       const priceValue = price != null && !Number.isNaN(Number(price)) ? Number(price) : null;
