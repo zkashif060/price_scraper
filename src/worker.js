@@ -215,14 +215,16 @@ export default {
     }
 
     const missing = [];
-    if (!env.EBAY_CLIENT_ID) missing.push("EBAY_CLIENT_ID");
+    const clientId = env.EBAY_CLIENT_ID || body.client_id;
+    const redirectUri = env.EBAY_RUNAME || body.redirect_uri;
+    if (!clientId) missing.push("EBAY_CLIENT_ID");
     if (!env.EBAY_CLIENT_SECRET) missing.push("EBAY_CLIENT_SECRET");
-    if (!env.EBAY_RUNAME) missing.push("EBAY_RUNAME");
+    if (!redirectUri) missing.push("EBAY_RUNAME");
     if (missing.length) {
       throw new Error(`Server is missing eBay OAuth settings: ${missing.join(", ")}`);
     }
 
-    const credentials = btoa(`${env.EBAY_CLIENT_ID}:${env.EBAY_CLIENT_SECRET}`);
+    const credentials = btoa(`${clientId}:${env.EBAY_CLIENT_SECRET}`);
     const tokenResp = await fetch("https://api.ebay.com/identity/v1/oauth2/token", {
       method: "POST",
       headers: {
@@ -232,7 +234,7 @@ export default {
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code,
-        redirect_uri: env.EBAY_RUNAME
+        redirect_uri: redirectUri
       })
     });
 
