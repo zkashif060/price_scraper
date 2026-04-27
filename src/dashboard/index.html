@@ -501,11 +501,11 @@ async function loadStats() {
     </div>
     <div class="pb">
       <div class="pb-lbl"><span>🟡 Warm — every 6 hrs</span><span>${warm}</span></div>
-      <div class="pb-track"><div class="pb-fill warm" style="width:${(warm/T*100).toFixed(1)}%"></div></div>
+      <div class="pb-track"><div class="pb-fill warm" style="width:${(warm/totalPriority*100).toFixed(1)}%"></div></div>
     </div>
     <div class="pb">
       <div class="pb-lbl"><span>⚪ Cold — skipped</span><span>${cold}</span></div>
-      <div class="pb-track"><div class="pb-fill cold" style="width:${(cold/T*100).toFixed(1)}%"></div></div>
+      <div class="pb-track"><div class="pb-fill cold" style="width:${(cold/totalPriority*100).toFixed(1)}%"></div></div>
     </div>
     <div class="pb-est">
       Est. Keepa tokens/month: ~${((hot*12+warm*4)*30).toLocaleString()} / 864,000 on €49 plan
