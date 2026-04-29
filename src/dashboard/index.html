@@ -655,6 +655,14 @@ async function modalAction() {
       code = params.get("code");
     }
 
+    if (!code) {
+      alert("Could not find the auth code in that URL. Make sure you copied the full redirect URL.");
+      return;
+    }
+
+    document.getElementById("modalBtn").textContent = "Saving...";
+    document.getElementById("modalBtn").disabled = true;
+
     try {
       // Trigger token exchange, passing the active eBay app settings.
       const data = await apiFetch("/api/exchange-token", {
@@ -670,7 +678,6 @@ async function modalAction() {
       document.getElementById("modalBtn").textContent = "Done ✓";
 
       log(`✓ Connected ${data.ebay_username || label} — refresh token stored securely`, "ok");
-      alert("Backend response (success):\n" + JSON.stringify(data, null, 2));
 
       // Wait 30s then reload accounts
       setTimeout(async () => {
@@ -678,14 +685,6 @@ async function modalAction() {
         document.getElementById("labelIn").value = "";
         await loadAccounts();
         log("Accounts reloaded", "ok");
-      }, 30000);
-
-    } catch (err) {
-      document.getElementById("modalBtn").textContent = "Save token →";
-      document.getElementById("modalBtn").disabled = false;
-      log(`✗ Failed: ${err.message}", "err");
-      alert("Backend error (failure):\n" + err.message);
-    }
       }, 30000);
 
     } catch (err) {
