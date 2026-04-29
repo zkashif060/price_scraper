@@ -396,6 +396,7 @@ const CONFIG = {
 };
 // EBAY_CLIENT_ID and EBAY_RUNAME are safe to keep in the public dashboard.
 // EBAY_CLIENT_SECRET, TURSO_URL and TURSO_TOKEN must remain in Cloudflare Worker env vars only.
+// Make sure the worker environment and this dashboard use the same eBay app settings.
 // This page does not store Turso or eBay secrets directly. The worker holds them safely.
 // ════════════════════════════════════════════════════
 
@@ -609,14 +610,16 @@ async function modalAction() {
 
   if (modalStep === 1) {
     // Step 1 — open eBay auth in new tab
-    const authUrl = "https://auth.ebay.com/oauth2/authorize?" + new URLSearchParams({
+
+    const authParams = new URLSearchParams({
       client_id:     CONFIG.EBAY_CLIENT_ID,
       redirect_uri:  CONFIG.EBAY_RUNAME,
       response_type: "code",
       scope:         SCOPES,
       prompt:        "login"
     });
-
+    const authUrl = "https://auth.ebay.com/oauth2/authorize?" + authParams.toString();
+    console.log("eBay OAuth URL:", authUrl); // Debug: log the full URL
     window.open(authUrl, "_blank");
 
     // Move to step 2
@@ -656,8 +659,13 @@ async function modalAction() {
     document.getElementById("modalBtn").disabled = true;
 
     try {
-      // Trigger GitHub Actions workflow to exchange token safely
-      const data = await apiFetch("/api/exchange-token", { label, code });
+      // Trigger token exchange, passing the active eBay app settings.
+      const data = await apiFetch("/api/exchange-token", {
+        label,
+        code,
+        client_id: CONFIG.EBAY_CLIENT_ID,
+        redirect_uri: CONFIG.EBAY_RUNAME
+      });
 
       modalStep = 3;
       document.getElementById("step2").className = "step done";

@@ -215,8 +215,9 @@ export default {
     }
 
     const missing = [];
-    const clientId = env.EBAY_CLIENT_ID || body.client_id;
-    const redirectUri = env.EBAY_RUNAME || body.redirect_uri;
+    // Prefer the credentials sent from the dashboard; fall back to worker env.
+    const clientId = body?.client_id || env.EBAY_CLIENT_ID;
+    const redirectUri = body?.redirect_uri || env.EBAY_RUNAME;
     if (!clientId) missing.push("EBAY_CLIENT_ID");
     if (!env.EBAY_CLIENT_SECRET) missing.push("EBAY_CLIENT_SECRET");
     if (!redirectUri) missing.push("EBAY_RUNAME");
