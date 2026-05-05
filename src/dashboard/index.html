@@ -645,14 +645,25 @@ async function modalAction() {
       return;
     }
 
-    let code;
-    try {
-      const urlObj = new URL(redirectUrl);
-      code = urlObj.searchParams.get("code");
-    } catch {
-      // Try parsing as query string directly
-      const params = new URLSearchParams(redirectUrl.includes("?") ? redirectUrl.split("?")[1] : redirectUrl);
-      code = params.get("code");
+    let code = "";
+    if (!redirectUrl.includes("?") && !redirectUrl.includes("&")) {
+      // Paste plain code
+      code = redirectUrl;
+    } else {
+      // Use regex to avoid `#` truncation which happens with new URL()
+      // eBay codes often contain %23 (#) which browsers might decode in the address bar.
+      const match = redirectUrl.match(/[?&]code=([^&]*)/);
+      if (match) {
+        code = match[1];
+      }
+    }
+
+    if (code) {
+      try {
+        code = decodeURIComponent(code);
+      } catch (e) {
+        // ignore
+      }
     }
 
     if (!code) {

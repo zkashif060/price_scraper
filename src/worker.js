@@ -236,7 +236,7 @@ export default {
         grant_type: "authorization_code",
         code,
         redirect_uri: redirectUri
-      })
+      }).toString()
     });
 
     const tokenData = await tokenResp.json();
