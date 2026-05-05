@@ -116,3 +116,65 @@ ON CONFLICT(asin) DO UPDATE SET priority='test';
 - Monitor dashboard "Test ASINs" section for manual tests
 - Watch for "bot protection" messages in logs
 - Dashboard shows priority breakdown and token usage estimates
+
+## Database Schema (local reference)
+
+Below are the main SQLite/Turso table schemas used by the project. Add these to your Turso instance to match the dashboard expectations.
+
+Products table:
+
+- Columns:
+  - id: INTEGER PRIMARY KEY AUTOINCREMENT
+  - asin: TEXT UNIQUE NOT NULL
+  - amazon_price: REAL DEFAULT NULL
+  - stock_status: TEXT DEFAULT 'unknown'
+  - priority: TEXT DEFAULT 'cold'
+  - views_24h: INTEGER DEFAULT 0
+  - sales_7d: INTEGER DEFAULT 0
+  - next_check_at: TEXT DEFAULT NULL
+  - last_checked: TEXT DEFAULT NULL
+  - created_at: TEXT DEFAULT CURRENT_TIMESTAMP
+  - Index: idx_products_priority (priority)
+
+ebay_accounts table:
+
+- Columns:
+  - id: INTEGER PRIMARY KEY AUTOINCREMENT
+  - account_id: TEXT UNIQUE NOT NULL
+  - ebay_username: TEXT DEFAULT ''
+  - refresh_token: TEXT NOT NULL
+  - status: TEXT DEFAULT 'active'
+  - connected_at: TEXT DEFAULT CURRENT_TIMESTAMP
+  - last_synced: TEXT DEFAULT NULL
+
+listings table:
+
+- Columns:
+  - id: INTEGER PRIMARY KEY AUTOINCREMENT
+  - account_id: TEXT NOT NULL
+  - sku: TEXT NOT NULL
+  - asin: TEXT DEFAULT ''
+  - ebay_item_id: TEXT DEFAULT ''
+  - offer_id: TEXT DEFAULT ''
+  - title: TEXT DEFAULT ''
+  - ebay_price: REAL DEFAULT 0
+  - quantity: INTEGER DEFAULT 0
+  - views_24h: INTEGER DEFAULT 0
+  - sales_7d: INTEGER DEFAULT 0
+  - status: TEXT DEFAULT 'active'
+  - last_synced: TEXT DEFAULT NULL
+  - created_at: TEXT DEFAULT CURRENT_TIMESTAMP
+
+price_changes table:
+
+- Columns:
+  - id: INTEGER PRIMARY KEY AUTOINCREMENT
+  - asin: TEXT NOT NULL
+  - account_id: TEXT NOT NULL
+  - sku: TEXT NOT NULL
+  - old_price: REAL
+  - new_price: REAL
+  - change_type: TEXT
+  - changed_at: TEXT DEFAULT CURRENT_TIMESTAMP
+
+Add these to your README as a quick reference for the dashboard and worker code.
