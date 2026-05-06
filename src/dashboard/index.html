@@ -346,6 +346,18 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
     <div id="asinList"><div class="empty">Loading...</div></div>
   </div>
 
+  <!-- Price changes -->
+  <div class="card" id="changes">
+    <div class="ch">
+      <h2>Recent price changes</h2>
+      <span class="badge bb">latest</span>
+    </div>
+    <div class="cform">
+      <div class="cform-hint">Latest price updates from tracked ASINs.</div>
+    </div>
+    <div id="changesList"><div class="empty">Loading...</div></div>
+  </div>
+
   <!-- Priority breakdown -->
   <div class="card" id="priorities">
     <div class="ch">
@@ -621,6 +633,38 @@ function filterAsins() {
       <div class="asin-updated">${ago(last_checked)}</div>
     `;
     el.appendChild(d);
+  }
+}
+
+async function loadChanges() {
+  const changesEl = document.getElementById("changesList");
+  if (!changesEl) return;
+
+  try {
+    const r = await apiFetch("/api/changes", { today: new Date().toISOString().split("T")[0] });
+    const rows = r.rows || [];
+
+    if (!rows.length) {
+      changesEl.innerHTML = `<div class="empty">No recent price changes.</div>`;
+      return;
+    }
+
+    changesEl.innerHTML = "";
+    for (const [asin, sku, old_price, new_price, change_type, changed_at, title] of rows) {
+      const d = document.createElement("div");
+      d.className = "asin-row";
+      d.innerHTML = `
+        <div class="asin-code">${asin}</div>
+        <div class="asin-title">${title || sku || 'No title'}</div>
+        <div class="asin-price">£${Number(new_price || 0).toFixed(2)}</div>
+        <div class="asin-priority ${change_type === 'up' ? 'bg' : change_type === 'down' ? 'br' : 'bm'}">${change_type || 'update'}</div>
+        <div class="asin-updated">${ago(changed_at)}</div>
+      `;
+      changesEl.appendChild(d);
+    }
+  } catch (err) {
+    console.warn('loadChanges failed:', err);
+    changesEl.innerHTML = `<div class="empty">Unable to load recent price changes.</div>`;
   }
 }
 
