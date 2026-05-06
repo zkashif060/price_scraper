@@ -121,6 +121,10 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
 /* ── Card ── */
 .card{background:rgba(17,17,34,.88);border:1px solid rgba(255,255,255,.06);border-radius:16px;margin-bottom:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.18);backdrop-filter:blur(14px);transition:all .3s ease;animation:fadeInUp .5s ease-out}
 .card:hover{box-shadow:0 32px 100px rgba(0,0,0,.25), 0 0 40px rgba(108,99,255,.05)}
+.component-card{min-height:260px;display:flex;flex-direction:column;}
+.list-panel{max-height:320px;overflow-y:auto;}
+.list-panel .asin-row,
+.list-panel .acc-row{margin:0}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .ch{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
 .ch h2{font-size:13px;font-weight:700;letter-spacing:-.02em}
@@ -319,59 +323,11 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
     <div class="sc b"><div class="sc-lbl">Restored</div><div class="sc-val"><span class="spin"></span></div><div class="sc-sub">—</div></div>
   </div>
 
-  <!-- Accounts card -->
-  <div class="card" id="accounts">
-    <div class="ch">
-      <h2>Connected accounts</h2>
-      <span class="badge bm" id="accBadge">—</span>
-    </div>
-    <div class="cform">
-      <input type="text" id="labelIn" placeholder="Account label — e.g. Store UK 1" maxlength="50">
-      <button class="btn-ebay" onclick="openConnectModal()">+ Connect eBay</button>
-      <div class="cform-hint">eBay will open in a new tab. Paste the redirect URL back here to complete the connection.</div>
-    </div>
-    <div class="acc-list" id="accList"><div class="empty">Loading...</div></div>
-  </div>
-
-  <!-- ASINs card -->
-  <div class="card" id="asins">
-    <div class="ch">
-      <h2>Tracked ASINs</h2>
-      <span class="badge bp" id="asinBadge">—</span>
-    </div>
-    <div class="cform">
-      <input type="text" id="asinSearch" placeholder="Search ASINs..." oninput="filterAsins()">
-      <div class="cform-hint">Filter by ASIN code or title</div>
-    </div>
-    <div id="asinList"><div class="empty">Loading...</div></div>
-  </div>
-
-  <!-- Price changes -->
-  <div class="card" id="changes">
-    <div class="ch">
-      <h2>Recent price changes</h2>
-      <span class="badge bb">latest</span>
-    </div>
-    <div class="cform">
-      <div class="cform-hint">Latest price updates from tracked ASINs.</div>
-    </div>
-    <div id="changesList"><div class="empty">Loading...</div></div>
-  </div>
-
-  <!-- Priority breakdown -->
-  <div class="card" id="priorities">
-    <div class="ch">
-      <h2>Keepa priority breakdown</h2>
-      <span class="badge bp">€49 plan</span>
-    </div>
-    <div class="pb-wrap" id="pbWrap"><div class="empty">Loading...</div></div>
-  </div>
-
-  <!-- Log -->
-  <div class="card">
-    <div class="ch"><h2>Activity log</h2></div>
-    <div class="log" id="logEl"></div>
-  </div>
+  <div id="accountsComponent"></div>
+  <div id="asinsComponent"></div>
+  <div id="changesComponent"></div>
+  <div id="prioritiesComponent"></div>
+  <div id="logComponent"></div>
 
 </main>
 </div>
@@ -478,6 +434,93 @@ function log(msg, type = "info") {
   d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
   el.prepend(d);
   while (el.children.length > 60) el.lastChild.remove();
+}
+
+function renderAccountsComponent() {
+  const container = document.getElementById("accountsComponent");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="card component-card" id="accounts">
+      <div class="ch">
+        <h2>Connected accounts</h2>
+        <span class="badge bm" id="accBadge">—</span>
+      </div>
+      <div class="cform">
+        <input type="text" id="labelIn" placeholder="Account label — e.g. Store UK 1" maxlength="50">
+        <button class="btn-ebay" onclick="openConnectModal()">+ Connect eBay</button>
+        <div class="cform-hint">eBay will open in a new tab. Paste the redirect URL back here to complete the connection.</div>
+      </div>
+      <div class="acc-list list-panel" id="accList"><div class="empty">Loading...</div></div>
+    </div>
+  `;
+}
+
+function renderAsinsComponent() {
+  const container = document.getElementById("asinsComponent");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="card component-card" id="asins">
+      <div class="ch">
+        <h2>Tracked ASINs</h2>
+        <span class="badge bp" id="asinBadge">—</span>
+      </div>
+      <div class="cform">
+        <input type="text" id="asinSearch" placeholder="Search ASINs..." oninput="filterAsins()">
+        <div class="cform-hint">Filter by ASIN code or title</div>
+      </div>
+      <div id="asinList" class="list-panel"><div class="empty">Loading...</div></div>
+    </div>
+  `;
+}
+
+function renderChangesComponent() {
+  const container = document.getElementById("changesComponent");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="card component-card" id="changes">
+      <div class="ch">
+        <h2>Recent price changes</h2>
+        <span class="badge bb">latest</span>
+      </div>
+      <div class="cform">
+        <div class="cform-hint">Latest price updates from tracked ASINs.</div>
+      </div>
+      <div id="changesList" class="list-panel"><div class="empty">Loading...</div></div>
+    </div>
+  `;
+}
+
+function renderPriorityComponent() {
+  const container = document.getElementById("prioritiesComponent");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="card component-card" id="priorities">
+      <div class="ch">
+        <h2>Keepa priority breakdown</h2>
+        <span class="badge bp">€49 plan</span>
+      </div>
+      <div class="pb-wrap list-panel" id="pbWrap"><div class="empty">Loading...</div></div>
+    </div>
+  `;
+}
+
+function renderLogComponent() {
+  const container = document.getElementById("logComponent");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="card component-card" id="logs">
+      <div class="ch"><h2>Activity log</h2></div>
+      <div class="log list-panel" id="logEl"></div>
+    </div>
+  `;
+}
+
+function renderDashboardComponents() {
+  renderAccountsComponent();
+  renderAsinsComponent();
+  renderChangesComponent();
+  renderPriorityComponent();
+  renderLogComponent();
 }
 
 // ── Time ago ──────────────────────────────────────────────────────────────────
@@ -840,6 +883,7 @@ async function loadAll() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+renderDashboardComponents();
 loadAll();
 setInterval(loadAll, 60000);
 </script>
