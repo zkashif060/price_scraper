@@ -22,14 +22,18 @@
   --red:     #ff4f4f;
   --amber:   #ffaa33;
   --blue:    #3da8ff;
+  --purple:  #a855f7;
+  --pink:    #ec4899;
   --mono:    'IBM Plex Mono', monospace;
   --sans:    'Syne', system-ui, sans-serif;
-  --r:       10px;
+  --r:       12px;
+  --shadow:  0 8px 32px rgba(0,0,0,.3);
+  --glow:    0 0 20px rgba(108,99,255,.2);
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,99,255,.18), transparent 35%), radial-gradient(circle at bottom right, rgba(61,168,255,.12), transparent 30%), var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;overflow-x:hidden}
+body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,99,255,.18), transparent 35%), radial-gradient(circle at bottom right, rgba(61,168,255,.12), transparent 30%), radial-gradient(circle at bottom left, rgba(168,85,247,.08), transparent 40%), var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;overflow-x:hidden}
 
 /* ── Shell layout ── */
 .shell{display:flex;min-height:100vh}
@@ -98,10 +102,10 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
 .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px;margin-bottom:18px}
 .sc{
   background:var(--card);border:1px solid var(--border);border-radius:var(--r);
-  padding:13px 15px;position:relative;overflow:hidden;transition:border-color .2s;
+  padding:13px 15px;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
 }
-.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--dim)}
-.sc:hover{border-color:var(--border2)}
+.sc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .sc.g::before{background:var(--green)}
 .sc.a::before{background:var(--amber)}
 .sc.b::before{background:var(--blue)}
@@ -115,7 +119,9 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
 .sc-sub{font-size:10px;color:var(--muted)}
 
 /* ── Card ── */
-.card{background:rgba(17,17,34,.88);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);margin-bottom:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.18);backdrop-filter:blur(14px)}
+.card{background:rgba(17,17,34,.88);border:1px solid rgba(255,255,255,.06);border-radius:16px;margin-bottom:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.18);backdrop-filter:blur(14px);transition:all .3s ease;animation:fadeInUp .5s ease-out}
+.card:hover{box-shadow:0 32px 100px rgba(0,0,0,.25), 0 0 40px rgba(108,99,255,.05)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .ch{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
 .ch h2{font-size:13px;font-weight:700;letter-spacing:-.02em}
 .badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;font-family:var(--mono)}
@@ -184,19 +190,22 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
 }
 .btn-dis:hover{border-color:var(--red);color:var(--red)}
 
-/* ── Price changes ── */
-.pc-row{
-  display:flex;align-items:center;gap:9px;
-  padding:8px 16px;border-bottom:1px solid var(--border);font-size:11px;
+/* ── ASINs ── */
+.asin-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  transition:background .12s;
 }
-.pc-row:last-child{border-bottom:none}
-.pc-asin{font-family:var(--mono);font-size:9.5px;color:var(--muted);width:90px;flex-shrink:0}
-.pc-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pc-price{font-family:var(--mono);font-size:10.5px;flex-shrink:0}
-.pc-price.up{color:var(--green)}
-.pc-price.dn{color:var(--red)}
-.pc-price.oo{color:var(--amber)}
-.pc-time{font-size:9.5px;color:var(--dim);flex-shrink:0;width:55px;text-align:right;font-family:var(--mono)}
+.asin-row:last-child{border-bottom:none}
+.asin-row:hover{background:rgba(255,255,255,.012)}
+.asin-code{font-family:var(--mono);font-size:11px;color:var(--accent2);font-weight:600;width:100px;flex-shrink:0}
+.asin-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.asin-price{font-family:var(--mono);font-size:11px;color:var(--green);flex-shrink:0;width:70px;text-align:right}
+.asin-priority{width:60px;text-align:center;flex-shrink:0}
+.asin-priority.hot{background:rgba(255,79,79,.1);color:var(--red);border:1px solid rgba(255,79,79,.2);border-radius:999px;padding:2px 6px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.asin-priority.warm{background:rgba(255,170,51,.1);color:var(--amber);border:1px solid rgba(255,170,51,.2);border-radius:999px;padding:2px 6px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.asin-priority.cold{background:rgba(82,82,122,.1);color:var(--muted);border:1px solid rgba(82,82,122,.2);border-radius:999px;padding:2px 6px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.asin-updated{font-size:9.5px;color:var(--dim);flex-shrink:0;width:80px;text-align:right;font-family:var(--mono)}
 
 /* ── Priority bars ── */
 .pb-wrap{padding:15px 16px}
@@ -266,6 +275,7 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
   <div class="nav">
     <a href="#top" class="active"><span class="nav-ic">⬡</span> Overview</a>
     <a href="#accounts"><span class="nav-ic">◈</span> Accounts</a>
+    <a href="#asins"><span class="nav-ic">📦</span> ASINs</a>
     <a href="#changes"><span class="nav-ic">△</span> Prices</a>
     <a href="#priorities"><span class="nav-ic">◎</span> Priorities</a>
   </div>
@@ -323,13 +333,17 @@ body{font-family:var(--sans);background:radial-gradient(circle at top, rgba(108,
     <div class="acc-list" id="accList"><div class="empty">Loading...</div></div>
   </div>
 
-  <!-- Price changes -->
-  <div class="card" id="changes">
+  <!-- ASINs card -->
+  <div class="card" id="asins">
     <div class="ch">
-      <h2>Recent price changes</h2>
-      <span class="badge bg" id="chBadge">today</span>
+      <h2>Tracked ASINs</h2>
+      <span class="badge bp" id="asinBadge">—</span>
     </div>
-    <div id="chList"><div class="empty">Loading...</div></div>
+    <div class="cform">
+      <input type="text" id="asinSearch" placeholder="Search ASINs..." oninput="filterAsins()">
+      <div class="cform-hint">Filter by ASIN code or title</div>
+    </div>
+    <div id="asinList"><div class="empty">Loading...</div></div>
   </div>
 
   <!-- Priority breakdown -->
@@ -471,45 +485,63 @@ function ago(iso) {
 async function loadStats() {
   const today = new Date().toISOString().split("T")[0];
 
-  const stats = await apiFetch("/api/stats", { today });
+  try {
+    const stats = await apiFetch("/api/stats", { today });
 
-  const totalAcc  = Number(stats.totalAccounts || 0);
-  const totalList = Number(stats.totalListings || 0);
-  const totalAsins = Number(stats.totalAsins || 0);
-  const hot = Number(stats.hotAsins || 0);
-  const warm = Number(stats.warmAsins || 0);
-  const cold = Number(stats.coldAsins || 0);
-  const upd = Number(stats.priceUpdates || 0);
-  const oos = Number(stats.oosCount || 0);
-  const rst = Number(stats.restoredCount || 0);
+    const totalAcc  = Number(stats.totalAccounts || 0);
+    const totalList = Number(stats.totalListings || 0);
+    const totalAsins = Number(stats.totalAsins || 0);
+    const hot = Number(stats.hotAsins || 0);
+    const warm = Number(stats.warmAsins || 0);
+    const cold = Number(stats.coldAsins || 0);
+    const upd = Number(stats.priceUpdates || 0);
+    const oos = Number(stats.oosCount || 0);
+    const rst = Number(stats.restoredCount || 0);
 
-  document.getElementById("sg").innerHTML = `
-    <div class="sc p"><div class="sc-lbl">Accounts</div><div class="sc-val">${totalAcc}</div><div class="sc-sub">connected</div></div>
-    <div class="sc"> <div class="sc-lbl">Listings</div><div class="sc-val">${totalList.toLocaleString()}</div><div class="sc-sub">all accounts</div></div>
-    <div class="sc"> <div class="sc-lbl">ASINs</div><div class="sc-val">${totalAsins.toLocaleString()}</div><div class="sc-sub">${hot} hot · ${warm} warm · ${cold} cold</div></div>
-    <div class="sc g"><div class="sc-lbl">Updated today</div><div class="sc-val">${upd}</div><div class="sc-sub">price changes</div></div>
-    <div class="sc a"><div class="sc-lbl">OOS paused</div><div class="sc-val">${oos}</div><div class="sc-sub">out of stock</div></div>
-    <div class="sc b"><div class="sc-lbl">Restored</div><div class="sc-val">${rst}</div><div class="sc-sub">back in stock</div></div>
-  `;
+    document.getElementById("sg").innerHTML = `
+      <div class="sc p"><div class="sc-lbl">Accounts</div><div class="sc-val">${totalAcc}</div><div class="sc-sub">connected</div></div>
+      <div class="sc"> <div class="sc-lbl">Listings</div><div class="sc-val">${totalList.toLocaleString()}</div><div class="sc-sub">all accounts</div></div>
+      <div class="sc"> <div class="sc-lbl">ASINs</div><div class="sc-val">${totalAsins.toLocaleString()}</div><div class="sc-sub">${hot} hot · ${warm} warm · ${cold} cold</div></div>
+      <div class="sc g"><div class="sc-lbl">Updated today</div><div class="sc-val">${upd}</div><div class="sc-sub">price changes</div></div>
+      <div class="sc a"><div class="sc-lbl">OOS paused</div><div class="sc-val">${oos}</div><div class="sc-sub">out of stock</div></div>
+      <div class="sc b"><div class="sc-lbl">Restored</div><div class="sc-val">${rst}</div><div class="sc-sub">back in stock</div></div>
+    `;
 
-  const T = Math.max(totalAsins, 1);
-  document.getElementById("pbWrap").innerHTML = `
-    <div class="pb">
-      <div class="pb-lbl"><span>🔴 Hot — every 2 hrs</span><span>${hot}</span></div>
-      <div class="pb-track"><div class="pb-fill hot" style="width:${(hot/T*100).toFixed(1)}%"></div></div>
-    </div>
-    <div class="pb">
-      <div class="pb-lbl"><span>🟡 Warm — every 6 hrs</span><span>${warm}</span></div>
-      <div class="pb-track"><div class="pb-fill warm" style="width:${(warm/T*100).toFixed(1)}%"></div></div>
-    </div>
-    <div class="pb">
-      <div class="pb-lbl"><span>⚪ Cold — skipped</span><span>${cold}</span></div>
-      <div class="pb-track"><div class="pb-fill cold" style="width:${(cold/T*100).toFixed(1)}%"></div></div>
-    </div>
-    <div class="pb-est">
-      Est. Keepa tokens/month: ~${((hot*12+warm*4)*30).toLocaleString()} / 864,000 on €49 plan
-    </div>
-  `;
+    const T = Math.max(totalAsins, 1);
+    document.getElementById("pbWrap").innerHTML = `
+      <div class="pb">
+        <div class="pb-lbl"><span>🔴 Hot — every 2 hrs</span><span>${hot}</span></div>
+        <div class="pb-track"><div class="pb-fill hot" style="width:${(hot/T*100).toFixed(1)}%"></div></div>
+      </div>
+      <div class="pb">
+        <div class="pb-lbl"><span>🟡 Warm — every 6 hrs</span><span>${warm}</span></div>
+        <div class="pb-track"><div class="pb-fill warm" style="width:${(warm/T*100).toFixed(1)}%"></div></div>
+      </div>
+      <div class="pb">
+        <div class="pb-lbl"><span>⚪ Cold — skipped</span><span>${cold}</span></div>
+        <div class="pb-track"><div class="pb-fill cold" style="width:${(cold/T*100).toFixed(1)}%"></div></div>
+      </div>
+      <div class="pb-est">
+        Est. Keepa tokens/month: ~${((hot*12+warm*4)*30).toLocaleString()} / 864,000 on €49 plan
+      </div>
+    `;
+
+    // Debug info - remove this later
+    console.log('Stats loaded:', stats);
+    log(`Stats: ${totalAsins} ASINs, ${totalAcc} accounts, ${totalList} listings`, "info");
+
+  } catch (err) {
+    console.error('Stats error:', err);
+    log(`Stats error: ${err.message}`, "err");
+    document.getElementById("sg").innerHTML = `
+      <div class="sc p"><div class="sc-lbl">Accounts</div><div class="sc-val">—</div><div class="sc-sub">error</div></div>
+      <div class="sc"> <div class="sc-lbl">Listings</div><div class="sc-val">—</div><div class="sc-sub">error</div></div>
+      <div class="sc"> <div class="sc-lbl">ASINs</div><div class="sc-val">—</div><div class="sc-sub">error</div></div>
+      <div class="sc g"><div class="sc-lbl">Updated today</div><div class="sc-val">—</div><div class="sc-sub">error</div></div>
+      <div class="sc a"><div class="sc-lbl">OOS paused</div><div class="sc-val">—</div><div class="sc-sub">error</div></div>
+      <div class="sc b"><div class="sc-lbl">Restored</div><div class="sc-val">—</div><div class="sc-sub">error</div></div>
+    `;
+  }
 }
 
 // ── Load accounts ─────────────────────────────────────────────────────────────
@@ -546,35 +578,47 @@ async function loadAccounts() {
   }
 }
 
-// ── Load price changes ────────────────────────────────────────────────────────
-async function loadChanges() {
-  const today = new Date().toISOString().split("T")[0];
-  const r = await apiFetch("/api/changes", { today });
+let asinData = [];
 
-  document.getElementById("chBadge").textContent = `${r.rows.length} today`;
-  const el = document.getElementById("chList");
+// ── Load ASINs ──────────────────────────────────────────────────────────────
+async function loadAsins() {
+  const r = await apiFetch("/api/products");
 
-  if (!r.rows.length) {
-    el.innerHTML = `<div class="empty">No price changes today yet.</div>`;
+  asinData = r.rows || [];
+  document.getElementById("asinBadge").textContent = `${asinData.length} tracked`;
+  filterAsins();
+}
+
+// ── Filter ASINs ─────────────────────────────────────────────────────────────
+function filterAsins() {
+  const searchTerm = document.getElementById("asinSearch").value.toLowerCase();
+  const el = document.getElementById("asinList");
+
+  if (!asinData.length) {
+    el.innerHTML = `<div class="empty">No ASINs tracked yet. Connect accounts to start monitoring.</div>`;
+    return;
+  }
+
+  const filtered = asinData.filter(([asin, price, stock_status, views_24h, sales_7d, priority, last_checked]) =>
+    asin.toLowerCase().includes(searchTerm) ||
+    (stock_status && stock_status.toLowerCase().includes(searchTerm))
+  );
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty">No ASINs match your search.</div>`;
     return;
   }
 
   el.innerHTML = "";
-  for (const [asin, sku, oldP, newP, tp, ts, title] of r.rows) {
+  for (const [asin, price, stock_status, views_24h, sales_7d, priority, last_checked] of filtered) {
     const d = document.createElement("div");
-    d.className = "pc-row";
-    let ph;
-    if (tp === "out_of_stock") ph = `<span class="pc-price oo">⏸ OOS</span>`;
-    else if (tp === "restored") ph = `<span class="pc-price up">▲ £${Number(newP).toFixed(2)}</span>`;
-    else {
-      const up = Number(newP) > Number(oldP);
-      ph = `<span class="pc-price ${up?'up':'dn'}">${up?'▲':'▼'} £${Number(oldP).toFixed(2)}→£${Number(newP).toFixed(2)}</span>`;
-    }
+    d.className = "asin-row";
     d.innerHTML = `
-      <div class="pc-asin">${asin||(sku||"").slice(0,10)}</div>
-      <div class="pc-title">${title||sku||"—"}</div>
-      ${ph}
-      <div class="pc-time">${ago(ts)}</div>
+      <div class="asin-code">${asin}</div>
+      <div class="asin-title">${asin} (${stock_status || 'unknown'})</div>
+      <div class="asin-price">£${Number(price || 0).toFixed(2)}</div>
+      <div class="asin-priority ${priority || 'cold'}">${priority || 'cold'}</div>
+      <div class="asin-updated">${ago(last_checked)}</div>
     `;
     el.appendChild(d);
   }
@@ -734,7 +778,7 @@ async function loadAll() {
   document.getElementById("refIc").textContent = "⏳";
 
   try {
-    await Promise.all([loadStats(), loadAccounts(), loadChanges()]);
+    await Promise.all([loadStats(), loadAccounts(), loadAsins(), loadChanges()]);
     document.getElementById("tsEl").textContent = `updated ${new Date().toLocaleTimeString()}`;
     document.getElementById("dotEl").className = "dot-live";
     document.getElementById("sbStatus").textContent = "live";

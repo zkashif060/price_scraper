@@ -40,6 +40,8 @@ export default {
           return this.corsResponse(await this.handleAddTestSet(env));
         case "/api/products":
           return this.corsResponse(await this.handleProducts(env));
+        case "/api/debug":
+          return this.corsResponse(await this.handleDebug(env));
         default:
           return this.corsResponse({ error: "Unknown API endpoint." }, 404);
       }
@@ -122,7 +124,19 @@ export default {
       throw new Error(err);
     }
 
-    return data.results?.[0]?.response?.result || { cols: [], rows: [] };
+    const result = data.results?.[0]?.response?.result || { cols: [], rows: [] };
+    if (Array.isArray(result.rows)) {
+      result.rows = result.rows.map(row => {
+        if (!Array.isArray(row)) return row;
+        return row.map(cell => {
+          if (cell && typeof cell === "object" && Object.prototype.hasOwnProperty.call(cell, "value")) {
+            return cell.value;
+          }
+          return cell;
+        });
+      });
+    }
+    return result;
   },
 
   async handleStats(env, body) {
@@ -349,5 +363,73 @@ export default {
 
     await this.executeSQL(env, "DELETE FROM products WHERE asin = ? AND priority = 'test'", [asin]);
     return { ok: true };
+  },
+
+  async handleDebug(env) {
+    const rawUrl = this.getTursoUrl(env);
+    const normalizedUrl = this.normalizeTursoUrl(rawUrl);
+    const token = this.getTursoToken(env);
+
+    const counts = {};
+    let rawProducts = null;
+    try {
+      rawProducts = await fetch(`${normalizedUrl}/v2/pipeline`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          requests: [{
+            type: "execute",
+            stmt: {
+              sql: "SELECT COUNT(*) FROM products",
+              args: []
+            }
+          }]
+        })
+      }).then(res => res.json());
+
+      counts.products = Number((await this.executeSQL(env, "SELECT COUNT(*) FROM products")).rows?.[0]?.[0] || 0);
+      counts.ebay_accounts = Number((await this.executeSQL(env, "SELECT COUNT(*) FROM ebay_accounts")).rows?.[0]?.[0] || 0);
+      counts.listings = Number((await this.executeSQL(env, "SELECT COUNT(*) FROM listings")).rows?.[0]?.[0] || 0);
+      counts.price_changes = Number((await this.executeSQL(env, "SELECT COUNT(*) FROM price_changes")).rows?.[0]?.[0] || 0);
+    } catch (err) {
+      return {
+        debug: true,
+        hasUrl: !!rawUrl,
+        url: normalizedUrl || null,
+        hasToken: !!token,
+        envVars: {
+          TURSO_URL: !!env.TURSO_URL,
+          LIBSQL_URL: !!env.LIBSQL_URL,
+          TURSO_TOKEN: !!env.TURSO_TOKEN,
+          LIBSQL_AUTH_TOKEN: !!env.LIBSQL_AUTH_TOKEN,
+          EBAY_CLIENT_ID: !!env.EBAY_CLIENT_ID,
+          EBAY_CLIENT_SECRET: !!env.EBAY_CLIENT_SECRET,
+          EBAY_RUNAME: !!env.EBAY_RUNAME
+        },
+        error: err.message,
+        rawProducts
+      };
+    }
+
+    return {
+      debug: true,
+      hasUrl: !!rawUrl,
+      url: normalizedUrl || null,
+      hasToken: !!token,
+      envVars: {
+        TURSO_URL: !!env.TURSO_URL,
+        LIBSQL_URL: !!env.LIBSQL_URL,
+        TURSO_TOKEN: !!env.TURSO_TOKEN,
+        LIBSQL_AUTH_TOKEN: !!env.LIBSQL_AUTH_TOKEN,
+        EBAY_CLIENT_ID: !!env.EBAY_CLIENT_ID,
+        EBAY_CLIENT_SECRET: !!env.EBAY_CLIENT_SECRET,
+        EBAY_RUNAME: !!env.EBAY_RUNAME
+      },
+      counts,
+      rawProducts
+    };
   }
 };
